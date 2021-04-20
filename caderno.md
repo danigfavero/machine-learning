@@ -113,10 +113,88 @@ Abordagens:
 1. Foco na distribuição de $x$ *(prevalece na estatística)*
 
    - ABORDAGEM **GERATIVA**
-
 2. Foco na saída esperada $P(y|x)$ *(prevalece em ML)*
 
    - ABORDAGEM **DISCRIMINATIVA**
+- APRENDIZADO LIVRE DE DISTRIBUIÇÃO
 
-   - APRENDIZADO LIVRE DE DISTRIBUIÇÃO
+### Superfície de decisão
 
+- E se os pontos não forem repartíveis por uma reta?
+  - Gaussiana 2D: linhas de contorno (distribuição simétrica)
+    - Duas normais formam um sino
+    - Medir matriz de covariância
+- Tem relação com a distribuição de probabilidade (na prática não conseguimos estimar)
+
+#### Distribuição normal
+
+- Casos em que a fronteira é uma reta
+  - $\Sigma_j = \sigma^2I$: ambas as classes têm a mesma matriz de covariância, covariância nula ($\sigma_{ii}=\sigma_{jj}$) -- distribuição simétrica
+  - $\Sigma_j=\Sigma$: ambas as classes têm a mesma matriz de covariância
+
+- Casos em que a fronteira não é uma reta
+  - $\Sigma_j$ arbitrário: classes têm matrizes de covariância distintas
+
+- Em **classificação binária**, se as duas classes têm distribuição normal com a **mesma matriz de covariância**, então a superfície de decisão ótima é um **hiperplano**
+
+## Perceptron
+
+- Encontra um hiperplano separador quando as classes são linearmente separáveis
+
+INPUT: $x = (x_1, x_2, \dots, x_d) \in \mathbb{R}^d$
+
+OUTPUT: $y \in \{-1, +1 \}$
+
+HIPÓTESE: $h(x)= sign((\sum^d_{i=1}{w_ix_i})+b),  b \in \mathbb{R}, w_i \in \mathbb{R}, i = 1, 2, \dots, d$
+
+Componente artificial, apenas para simplificar a notação:
+$$
+x = (1, x_1, x_2,  \dots, x_d) \in \mathbb{R}^{d+1} \\
+w = (w_0, w_1, w_2,  \dots, w_d) \in \mathbb{R}^{d+1}
+$$
+Portanto 
+$$
+h(x) = sign(w^Tx) \ \ \ \ \ (w^Tx=0 \text{ define um hiperplano})
+$$
+
+### Algoritmo
+
+Seja $w$ o peso "atual"
+
+Seja $\mathcal{D}= \{(x^{(i)}, y^{(i)}), i = 1, \dots, N \}$ o conjunto de treinamento 
+
+Repita:
+
+ 1. Seja $(x^{(i)}, y^{(i)}) \in \mathcal{D} $ tal que $sign(w^Tx^{(i)}) \neq y^{(i)}$. Se não houver tal par, então pare.
+
+ 2. Atualize o peso atual conforme: 
+
+    $w \leftarrow w + y^{(i)}x^{(i)}, y^{(i)} \in \{ -1, +1 \}$
+
+Devolva $w$
+
+### Intuição
+
+![img](http://www.cs.cornell.edu/courses/cs4780/2015fa/web/lecturenotes/images/perceptron/perceptron_img2.png)
+
+### Convergência do algoritmo perceptron
+
+Assumimos...
+
+- Duas classes são **linearmente separáveis** se existe um hiperplano separador com margem $\gamma$ -- existe um vetor de pesos $w$ com norma 1 ($\|w\|=1$) tal que $y^{(i)}w^Tx^{(i)}>\gamma, \forall i$
+
+- Tome também $R$ como sendo a **máxima norma** dos exemplos $x^{(i)} \in \mathcal{D}$
+
+- Tome $k$ como o **número de iterações** do algoritmo
+
+A prova consiste em mostrar que $k$ é limitado por $\mathcal{O}(R^2/\gamma^2)$
+
+​	**(1)** 			$\|w^{k+1}\| > k \gamma$
+
+​	**(2)** 			$\| w^{k+1} \|^2 \leq kR^2$
+
+​	**(1) + (2)**    $k^2\gamma^2< \| w^{k+1} \|^2 \leq kR^2 \implies k < \frac{R^2}{\gamma^2}$, que é finito
+
+### Observações
+
+- Pocket algorithm
