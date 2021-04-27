@@ -198,3 +198,207 @@ A prova consiste em mostrar que $k$ é limitado por $\mathcal{O}(R^2/\gamma^2)$
 ### Observações
 
 - Pocket algorithm
+
+## Regressão Linear
+
+### MSE: função de custo/perda
+
+- A função de custo é quadrática, então é convexa
+  $$
+  J(w_0,w_1) = \frac{1}{N} \sum^{N}_{n=1}{(\hat{y}^{(n)} - y^{(n)})^2}, \\ \hat{y}^{(n)} = h(x^{(n)})=w_0+w_1 x^{(n)}
+  $$
+
+- Portanto, ela tem mínimo global
+
+### Solução analítica
+
+**Solução:** $d = 1$ 
+$$
+J(w_0,w_1) = \frac{1}{N} \sum^{N}_{n=1}{(w_0+w_1 x^{(n)} - y^{(n)})^2}
+$$
+Derivadas parciais:
+$$
+\frac{\partial J(w_0,w_1)}{\partial w_0} = 2 \sum^N_ {n=1}(w_0+w_1x^{(n)}-y^{(n)})
+\\
+\frac{\partial J(w_0,w_1)}{\partial w_1} = 2 \sum^N_ {n=1}(w_0+w_1x^{(n)}-y^{(n)})x^{(n)}
+$$
+Ponto mínimo de $J(w_0, w_1)$:
+$$
+w_0 = \bar{y} - w_1 \bar{x}\\
+w_1 = \frac{\sum^N_{n=1}(x^{(n)}-\bar{x})(y^{(n)}-\bar{y})}{\sum^N_{n=1}(x^{(n)}-\bar{x})^2}
+$$
+**Notação:** caso $d$-dimensional ($d>1$)
+$$
+x^{(n)} = (1, x_1, x_2, \dots, x_d) \in \{1\} \times \mathbb{R}^d \rightarrow \text{ array } (d+1, 1) \\
+w = (w_0, w_1, w_2, \dots, w_d) \in \mathbb{R}^{d+1} \rightarrow \text{ array } (d+1, 1)
+$$
+
+$$
+h_w(x^{(n)}) = \sum^d_{i=0}w_ix_i = \begin{bmatrix} w_0 & w_1 & \dots & w_d \end{bmatrix} \begin{bmatrix} 1 \\ x_1 \\ \vdots \\ x_d \end{bmatrix} = w^Tx^{(n)}\\
+J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2
+$$
+
+**Solução baseada em álgebra de matrizes**
+
+Função de custo: $J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2$
+
+Resíduos:
+
+![residuals](./img/residuals.png)
+
+Portanto, o vetor de resíduos pode ser expresso como
+$$
+\begin{bmatrix}
+h_w(x^{(1)})-y^{(1)} \\
+h_w(x^{(2)})-y^{(2)} \\
+\vdots \\
+h_w(x^{(N)})-y^{(N)} \\
+\end{bmatrix}
+=
+Xw-y
+$$
+Nós precisamos do quadrado dos resíduos:
+$$
+\begin{bmatrix}
+(h_w(x_1)-y_1)^2 \\
+(h_w(x_2)-y_2)^2 \\
+\vdots \\
+(h_w(x_N)-y_N)^2 \\
+\end{bmatrix}
+=
+(Xw-y)^T(Xw-y)
+$$
+Que pode ser expresso como $\|Xw-y\|^2$
+
+Minimizando $J$:
+$$
+J(w) = \frac{1}{N}\|Xw-y\|^2 \\
+\nabla J(w) = \frac{2}{N}X^T(Xw-y)=0 \\
+X^TXw = X^Ty \\
+w = X^\dagger y, \text{ onde } X^\dagger = (X^TX)^{-1}X^T
+$$
+$X^\dagger$ é a "pseudo-inversa" de $X$
+
+### O algoritmo de regressão linear
+
+1. Construa a matriz $X$ e o vetor $y$ do conjunto de dados $(x_1, y_1), \dots, (x_N, y_N)$ , na forma:
+   $$
+   X = \begin{bmatrix} - x_ 1^T- \\ - x_2^T - \\ \vdots \\ - x_N^T - \end{bmatrix},\ \ y =  \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{bmatrix}.
+   $$
+   
+
+2. Compute a pseudo-inversa $X^\dagger = (X^TX)^{-1}X^T$
+
+3. Devolva $w = X^\dagger y$
+
+**Custo computacional**
+
+- Solução: $w = (X^TX)^{-1}X^Ty$
+
+- Precisamos computar a inversa de $X^TX$ (dimensão $(d+1) \ times (d+1)$) $\rightarrow$ muito caro!
+
+- Complexidade da inversão de matriz: cúbica
+- A computação de $X^TX$também é cara ($N$ pode ser muito grande)
+
+### Gradiente Descendente
+
+Seja $J(w)$ a função custo a ser minimizada
+
+**Pseudocódigo:**
+
+1. Inicialize $w$ (tipicamente com valores pequenos aleatórios)
+2. Itere até algum critério de parada ser obedecido
+   1. Compute o gradiente de $J$ em $w$ ("direção de crescimento mais rápido")
+   2. Atualize $w$ na direção negativa do gradiente
+
+**Exemplo: função de custo MSE**
+$$
+J(w) = \frac{1}{N} \sum^N_{n=1}( \underbrace{h_w(x^{(n)})}_{\hat{y}^{(n)}=w^Tx^{(n)}} - y^{(n)})^2
+$$
+Vetor gradiente de $J$:
+$$
+\nabla J(w) = \begin{bmatrix} \frac{\partial J}{\partial w_0}, \frac{\partial J}{\partial w_1}, \dots, \frac{\partial J}{\partial w_d} \end{bmatrix}^T
+$$
+![partial](./img/partial.png)
+$$
+\frac{\partial J}{\partial w_j} = \sum_n(\hat{y}^{(n)}- y^{(n)})x_j^{(n)}
+$$
+**Técnica do gradiente descendente** 
+
+1. Peso inicial: $w(0)$
+2. Regra de atualização de peso ($r$-ésima iteração):
+   1. $w(r+1) = w(r) + \eta \Delta w(r)$
+   2. $\Delta w(r) = - \nabla J(w), \Delta w_j(r) = \sum_n (y^{(n)}- \hat{y})x_j^{(n)}$
+
+($\eta$: taxa de aprendizado - geralmente um valor pequeno, como $0.001$)
+
+#### Gradiente descendente - Batch
+
+$$
+\begin{align}
+& \textbf{Input: } D, \eta, \textit{épocas} \\
+& \textbf{Output: } w \\
+& \quad w \leftarrow \text{pequeno valor aleatório} \\
+& \quad \textbf{repita} \\
+& \quad\quad \Delta w_j \leftarrow 0,\ j = 0, 1, 2, \dots, d \\
+& \quad\quad \textbf{para todo } (x, y) \in D \textbf{ faça} \\
+& \quad\quad\quad \text{compute } \hat{y} = w^Tx \\
+& \quad\quad\quad \Delta w_j \leftarrow \Delta w_j + (y - \hat{y})x_j,\ j = 0, 1, 2, \dots, d \\
+& \quad\quad \textbf{fim} \\
+& \quad\quad w_j \leftarrow w_j + \eta \Delta w_j,\ j = 0, 1, 2, \dots, d \\
+& \quad \textbf{até que } \text{número de iterações} = \textit{épocas} 
+\end{align}
+$$
+
+#### Gradiente descendente estocástico
+
+$$
+\begin{align}
+& \textbf{Input: } D, \eta, \textit{épocas} \\
+& \textbf{Output: } w \\
+& \quad w \leftarrow \text{pequeno valor aleatório} \\
+& \quad \textbf{repita} \\
+& \quad\quad \textbf{para todo } (x, y) \in D \textbf{ faça} \\
+& \quad\quad\quad \text{compute } \hat{y} = w^Tx \\
+& \quad\quad\quad \Delta w_j \leftarrow \Delta w_j + \eta(y - \hat{y})x_j,\ j = 0, 1, 2, \dots, d \\
+& \quad\quad \textbf{fim} \\
+& \quad \textbf{até que } \text{número de iterações} = \textit{épocas} 
+\end{align}
+$$
+
+#### Gradiente descendente com Mini-batch
+
+- Batch: $\Delta w_j(r) = \sum_n (y^{(n)} - \hat{y}^{(n)}) x_j^{(n)}$
+  - Utiliza todas as amostras em cada iteração quando está atualizando parâmetros
+  - Para cada atualização, temos que somar todas as amostras
+- Estocástico: $\Delta w_j(r) = (y^{(n)} - \hat{y}^{(n)})x_j^{(n)}$
+  - Em vez de utilizar todas as amostras, o método estocástico atualiza os parâmetros a cada amostra visitada
+  - O aprendizado ocorre em cada amostra
+
+- Mini-batch: entre os dois
+  - Em vez de utilizar todas as amostras, o mini-batch utiliza um número menor de amostras, baseado no *batch-size*
+  - O aprendizado ocorre em cada mini-batch
+
+![gradient descent variants](https://imaddabbura.github.io/post/gradient-descent-algorithm/featured_hu6c17d2d6288aaa5362bfbb89cf77ab07_2413744_1200x0_resize_lanczos_2.PNG)
+
+#### Passo com tamanho fixo?
+
+Como $\eta$ afeta o algoritmo:
+
+![learning rate](./img/learning-rate.png)
+
+$\eta$ deve aumentar com a  inclinação
+
+#### Coeficiente de determinação
+
+- Medida utilizada para avaliar o quão bom é o *fit* do modelo
+
+![coefficient of determination](https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Coefficient_of_Determination.svg/400px-Coefficient_of_Determination.svg.png)
+$$
+R^2 = 1 - \frac{SS_{res}}{SS_{tot}}
+$$
+
+- Quanto melhor a regressão linear (gráfico à direita) se encaixar nos dados em comparação com a média simples (gráfico à esquerda), $R^2$ ficará mais perto de $1$
+- As áreas dos quadrados azuis representam os resíduos ao quadrado, à respeito da regressão linear
+- As áreas dos quadrados vermelhos representam os resíduos ao quadrado, à respeito do valor médio
+
