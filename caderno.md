@@ -286,7 +286,6 @@ $X^\dagger$ é a "pseudo-inversa" de $X$
    X = \begin{bmatrix} - x_ 1^T- \\ - x_2^T - \\ \vdots \\ - x_N^T - \end{bmatrix},\ \ y =  \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_N \end{bmatrix}.
    $$
    
-
 2. Compute a pseudo-inversa $X^\dagger = (X^TX)^{-1}X^T$
 
 3. Devolva $w = X^\dagger y$
@@ -402,3 +401,199 @@ $$
 - As áreas dos quadrados azuis representam os resíduos ao quadrado, à respeito da regressão linear
 - As áreas dos quadrados vermelhos representam os resíduos ao quadrado, à respeito do valor médio
 
+## Regressão logística
+
+- Abordagem estatística (teorema de Bayes)
+
+### Classificação binária
+
+- Como utilizar **regressão linear** para classificação binária?
+
+  - Sejam os negativos definidos por $y=-1$ e os positivos por $y=+1$
+
+  - Podemos determinar $h_w(x)=w^Tx$ e utilizar $\hat{y}= sign (w^Tx)$
+
+  - Aproxima mais ou menos bem a fronteira de decisão
+
+  - **Problema**: deslocamento para um lado, dependendo de como os dados estão espalhados
+
+    ![regressão](./img/regressao.png)
+
+    Exemplos positivos mais a direita contribuem para um erro maior, e exemplos positivos mais à esquerda serão classificados como negativos
+
+### Distribuição *target*
+
+- ***Targets* ruidosos**
+
+  - Exemplos que não são perfeitamente separáveis — a "*target function*" nem sempre é uma função
+
+- Como discutimos, do Teorema de Bayes, sabemos que: $P(y|x)=\frac{P(y)p(x|y)}{p(x)}$
+
+  - Então, em vez de tentar adivinhar $y$, por que não estimar $P(y|x)$?
+  - Em vez de $y=f(x)$, nosso alvo será a distribuição $P(y|x)$
+
+- Assumindo que a nossa target é $f(x)=P(y=+1|x)$
+
+  - Podemos escrever $P(y|x) = \cases{f(x), \text{ if } y=+1, \\ 1 - f(x), \text{ if } y=-1}$
+  - Note que não temos acesso a $f(x)$, nós só sabemos que $y$ vem de uma distribuição desconhecida $P(y|x)$
+  - Mas, se formos capazes de "aprender" $f(x)$, seremos capazes de saber $P(y|x)$
+
+- **Escolhendo um espaço de hipóteses...**
+
+  - Como o nosso *target* é tal que $0 \leq f(x) \leq 1$, vamos considerar hipóteses de mesmo tipo: $h_w(x)= \theta (w^T x)$ 
+  - Tal que $\theta$ é a função sigmoide: $\theta(z) = \frac{1}{1+e ^{-z}} = \frac{e^z}{e^z+1}$
+    - $0 \leq \theta (z) \leq 1 \implies 0 \leq h_w(x) \leq 1$
+
+  ![sigmoid](./img/sigmoid.png)
+
+  - Se $h_w(x) \approx f(x)$, então $P(y|x) = \cases{h_w(x), \text{ if } y=+1, \\ 1 - h_w(x), \text{ if } y=-1}$ deve ser um bom estimador de $P(y|x)$
+  - Para evitar lidar separadamente com os dois casos, $y=+1$ e $y=-1$, note que $1 - \theta(z) = \theta(-z)$
+  - Usando este fato mais $h_w(x)=\theta(w^Tx)$, podemos escrever $P_w(y|x) = \theta(yw^Tx)$
+
+- **Aprendendo a função *target*...**
+
+  - Dados de treinamento disponíveis: $\mathcal{D} = \{ (x^{(n)}, y^{(n)}) \in X \times Y, n= 1, \dots, N\}$
+  - Esses exemplos seguem como uma distribuição desconhecida $P(x,y)$
+  - $y$ segue a distribuição $P(y|x)$
+  - Dentre todas as distribuições $P_w(y|x) = \theta (yw^Tx)$, qual $w$ melhor aproxima $P(y|x)$?
+
+### Função de verossimilhança
+
+- Adivinhar qual é a distribuição que deu origem a essas amostras $\rightarrow$ encontrar a distribuição que maximiza a probabilidade de observar aquelas amostras
+
+- **Estimação de máxima verossimilhança**
+
+  - Assumimos uma distribuição paramétrica e encontramos os parâmetros que correspondem à distribuição que maximiza a probabilidade de observar os exemplos realmente observados
+
+  - Em nossa configuração, dentre todas as distribuições $P_w(y|x) = \theta(yw^Tx)$ (parâmetro $w$), qual é aquele que maximiza a probabilidade de observar os exemplos em $\mathcal{D}$?
+
+  - Assumindo que os exemplos em $\mathcal{D}$ são independentes e identicamente distribuídos, a **função de verossimilhança** pode ser escrita como:
+    $$
+    \prod_{n=1}^N P_w(y^{(n)}|x^{(n)}) = \prod_{n=1}^N \theta(y^{(n)} w^T x^{(n)})
+    $$
+
+- **Problema de otimização**
+
+  - Encontrar $w$ que maximiza $\prod_{n=1}^N \theta(y^{(n)} w^T x^{(n)})$
+
+  - Ou, equivalentemente, que maximiza $\frac{1}{N} \ln (\prod_{n=1}^N \theta(y^{(n)} w^T x^{(n)}))$
+
+  - Ou, equivalentemente, que minimiza:
+    $$
+    -\frac{1}{N} \ln (\prod_{n=1}^N \theta(y^{(n)} w^T x^{(n)}))  =
+    -\frac{1}{N} \sum_{n=1}^N  \ln (\theta(y^{(n)} w^T x^{(n)})) \\ =
+    \frac{1}{N} \sum_{n=1}^N  \ln (\frac{1}{\theta(y^{(n)} w^T x^{(n)})}) =
+    \frac{1}{N} \sum_{n=1}^N \ln(1+e^{-y^{(n)}w^Tx^{(n)}})
+    $$
+
+- **Regressão logística**
+
+  - Função de perda a ser minimizada:
+    $$
+    E_{in} = \frac{1}{N} \sum^N_{n=1} \underbrace{\ln(1+e^{-y^{(n)}w^Tx^{(n)}})}_{err(y^{(n)}, \hat{y}^{(n)})}
+    $$
+
+  - Interpretação:
+
+    - Se os sinais de $y^{(n)}$ e $w^Tx^{(n)}$ concordam, o expoente em $e^{-y^{(n)}w^Tx^{(n)}}$ é negativo $\implies err(y^{(n)}, \hat{y}^{(n)})$ tende a se aproximar de zero
+    - Se os sinais de $y^{(n)}$ e $w^Tx^{(n)}$ discordam, o expoente em $e^{-y^{(n)}w^Tx^{(n)}}$ é positivo $\implies err(y^{(n)}, \hat{y}^{(n)})$ tende a ser grande
+
+- **Observações:**
+
+  - $y^{(n)} \in \{ -1, +1 \}$ enquanto $\hat{y}^{(n)} \in [0,1]$
+    - Nós usamos $\hat{y}^{(n)}$ para indicar que esta é a saída do algoritmo, mas isso pode não ser o mais adequado já que $\hat{y}^{(n)} = \theta(w^Tx) = P_w (y= +1|x^{(n)})$
+    - É por isso que o método é chamado **regressão** logística
+  - A formulação que vimos assume $y \in \{ -1, +1 \}$
+  - Uma formulação mais comum (?) assume $y \in \{0,1\}$
+
+#### Classificação de erros
+
+- É conveniente que o algoritmo de regressão logística tenha como saída $\hat{y}^{(n)} = \theta(w^Tx) = P_w (y= +1|x^{(n)})$
+
+- **Tipos de classificações de erros:**
+
+  ![errors](./img/errors.png)
+
+- Você pode decidir classificar $x^{(n)}$ como positivo somente se $P_w (y= +1|x^{(n)}) \geq 0.8$
+
+  - Por outro lado, $P_w (y= +1|x^{(n)}) \geq 0.3$ pode fazer mais sentido em outros casos
+  - O tipo de erro pode ter custos associados
+
+#### Classes desbalanceadas
+
+- Se tivermos muitas observações de uma classe, ela pode desbalancear o modelo
+- É importante considerar esse fenômeno no design de classificadores
+
+#### Perda *cross-entropy*
+
+- Formulação quando usamos $Y = \{0,1\}$ em vez de  $Y = \{-1,+1\}$
+- Um truque para escrever $P(y|x)$ como uma única equação:
+
+$$
+P(y|x) = P(y=1|x)^y P(y=0|x)^{1-y} = P(y=1|x)^y [1 - P(y=1|x)]^{1-y}
+$$
+
+- Função de verossimilhança (índice $(n)$ omitido para uma notação mais clara):
+  $$
+  \begin{align}
+  \prod_{(x,y) \in \mathcal{D}} P(y|x) & = \prod_{(x,y) \in \mathcal{D}} P(y=1|x)^y [1 - P(y=1|x)]^{1-y} \\
+  & \approx \prod_{(x,y) \in \mathcal{D}}  [\theta(w^Tx)]^y [1 - \theta(w^Tx)]^{1-y} \\
+  & = \prod_{(x,y) \in \mathcal{D}} \hat{y}^y (1- \hat{y})^{1-y}
+  \end{align}
+  $$
+
+- O problema de maximizar a função de verossimilhança acima é equivalente a minimizar a seguinte expressão:
+  $$
+  \begin{align}
+  & -\ln \prod_{(x,y) \in \mathcal{D}} \hat{y}^y (1- \hat{y})^{1-y} = -\sum_{(x,y) \in \mathcal{D}} \ln(\hat{y}^y (1- \hat{y})^{1-y}) \\
+  & = -\sum_{(x,y) \in \mathcal{D}} \ln(\hat{y}^y) + \ln((1- \hat{y})^{1-y}) = -\sum_{(x,y) \in \mathcal{D}} y\ln\hat{y} + (1-y)\ln(1- \hat{y})
+  \end{align}
+  $$
+
+- ***Cross-entropy loss:***
+
+$$
+J(w) = -\frac{1}{N} \sum^N_{n=1} y^{(n)} \ln \hat{y}^{(n)} + (1 - y^{(n)}) \ln(1 - \hat{y}^{(n)}), \text{ onde } \hat{y}^{(n)} = \theta(w^Tx)
+$$
+
+​		Dadas duas distribuição $p$ e $q$ sobre $A$, *cross-entropy* é definida como: $H(p,q) = - \sum_{a \in A} p(a) \log q(a)$
+
+### Otimização
+
+- Utilizamos o gradiente descendente para otimizar ambas as formulações:
+
+#### Para $Y = \{-1,+1\}:$
+
+​	Fórmula: $E_{in} = \frac{1}{N} \sum^N_{n=1} \ln(1+e^{-y^{(n)}w^Tx^{(n)}})$
+
+​	Gradiente: $\frac{\partial}{\partial w} [\ln(1+e^{-y^{(n)}w^Tx^{(n)}})]= ?$
+
+​	Denote $s=-yx$. Então $\frac{\partial}{\partial w} [\ln(1+e^{w^Ts})]= ?$
+
+​	Como $\frac{\partial}{\partial w} [\ln[f(x)]] = \frac{f'(x)}{f(x)}$, então
+$$
+\frac{\partial}{\partial w} [\ln(1 + e^{w^T s})]= \frac{(1 + e^{w^T s})'}{1 + e^{w^T s}} = \frac{s e^{w^T s}}{1 + e^{w^T s}} = s \frac{e^{w^T s}}{1 + e^{w^T s}} = s \frac{1}{1 + e^{-w^T s}}
+$$
+​	Portanto, 
+$$
+\frac{\partial}{\partial w} [\ln(1 + e^{-y w^T x})] = -\frac{yx}{1 + e^{y w^T x}}
+$$
+
+
+#### Para $Y = \{0,1\}:$
+
+​	Fórmula: $J(w) = -\frac{1}{N} \sum^N_{n=1} y^{(n)} \ln \hat{y}^{(n)} + (1 - y^{(n)}) \ln(1 - \hat{y}^{(n)})$
+$$
+\hat{y}^{(n)} = h_w(x) = \theta(w^T x) = \frac{1}{1 + e^{-w^Tx}}
+$$
+​	Derivadas parciais: $\frac{\partial}{\partial w_j} J(w) = \sum^N_{n=1} (\hat{y}^{(n)} - y^{(n)})x_j^{(n)}$
+
+​	Atualização dos pesos: $\Delta w_j(r) =  \sum^N_{n=1} (y^{(n)} - \hat{y}^{(n)})x_j^{(i)}$
+
+### Um terceiro modelo linear
+
+$$
+s = \sum^d_{i=0} w_i x_i
+$$
+
+![linear models](./img/linear-models.png)
