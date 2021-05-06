@@ -238,7 +238,7 @@ h_w(x^{(n)}) = \sum^d_{i=0}w_ix_i = \begin{bmatrix} w_0 & w_1 & \dots & w_d \end
 J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2
 $$
 
-**Solução baseada em álgebra de matrizes**
+**initSolução baseada em álgebra de matrizes**
 
 Função de custo: $J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2$
 
@@ -597,3 +597,105 @@ s = \sum^d_{i=0} w_i x_i
 $$
 
 ![linear models](./img/linear-models.png)
+
+## Is learning feasible?
+
+- Como a hipótese escolhida $g$ vai se comportar fora do conjunto de treinamento (no mundo real)?
+  - Aprender X Memorizar
+- **Fato**: a função $f$ é deseconhecida
+- Não há garantia de que escolheremos o $g$ correto para $f$
+- Conseguimos escolher uma hipótese $g$ que tem um erro pequeno?
+- Nosso objetivo é escolher o $g \in \mathcal{H}$ ótimo, com mínimo $E_{out}(g)= \mathbb{E} [Err(y, g(x))]$ (Erro esperado $p(x,y)$)
+- Escolhemos $g$ baseado em $E_{out} = $
+- **ERROS**
+  - Erro empírico $E_{in}$ (estávamos chamando de $J$)
+  - Erro verdadeiro $E_{out}$
+- **QUESTÃO:** $E_{in}(g)$ diz algo sobre $E_{out}(g)$?
+
+### Uma visão probabilística
+
+#### Problema: urna com bolas de gude verdes e vermelhas
+
+- $\mu = $ probabilidade de bolinhas vermelhas ($E_{out}$)
+- Dada uma amostra de $N$ bolinhas (escolhidas independentemente), temos $\nu =$ fração de bolinhas vermelhas ($E_{in}$)
+- $\mathbb{P} [\text{escolher uma bolinha vermelha}] = \mu$
+- $\mathbb{P} [\text{escolher uma bolinha vermde}] = 1-\mu$
+- $\nu$ diz algo sobre $\mu$?
+  - Não! A amostra pode ser majoritariamente verde enquanto a urna é majoritariamente vermelha
+  - Sim! A frequência da amostra $\nu$ é provavelmente próxima à frequência da urna $\mu$
+- Possível X provável
+- $\nu$ é uma estimativa de $\mu$: é boa o suficiente? $|\nu-\mu|$ é pequeno?
+- **Teorema do Limite Central**
+  - Tome amostras de tamanho $N$ e compute a fração de bolinhas vermelhas $\nu$
+  - Repita várias vezes
+  - A distribuição de $\nu$ será uma ditribuição normal com média $\mu$
+  - Quanto maior o $N$, menor o desvio padrão de $\nu$
+
+
+
+- Outras "leis" que estabelecem uma relação entre $\nu$ e $\mu$:
+
+  - **Desigualdade de Hoeffding**
+
+    $P(|\nu - \mu|> \epsilon) \leq 2e^{-2 \epsilon^2 N}$
+
+    - Limita a probabilidade de ter uma estimativa ruim, relacionada ao tamanho da amostra $(N)$
+
+    - Bound variation em função de $N$:
+
+      ![hoeffding](./img/hoeffding.png)
+
+- Conceitualmente, podemos colorir cada $x \in \mathcal{X}$:
+  - verde se $h(x) = f(x)$
+  - vermelho se $h(x) \neq f(x)$
+- $E_{out}(h)$é a fração de instâncias vermelhas em $\mathcal{X}$
+- $E_{in}(h) $ é a fração de instâncias vermelhas em $\mathcal{D}$
+
+- $E_{out}(h)$ = parâmetro desconhecido
+- $E_{in}(h) $ = estimativa de $E_{out}(h)$
+- $|E_{in}(h) - E_{out}(h)| > \epsilon $??
+
+#### Dada uma hipótese $h$ qualquer...
+
+- Generalizando, temos:
+
+  $\mathbb{P}(|E_{in}(h) - E_{out}(h)|> \epsilon) \leq 2e^{-2 \epsilon^2 N}$
+
+- **Problema**: a fórmula só funciona para um certo $h$ fixo
+
+  - Essa é uma "verificação" de $h$, não learning
+  - Em geral fazemos uma escolha de $h$
+
+- Múltiplas urnas: $h_1, h_2, \dots, h_M$
+  - $E_{in}(h_1), E_{in}(h_2), \dots, E_{in}(h_M)$
+  - $E_{out}(h_1), E_{out}(h_2), \dots, E_{out}(h_M)$
+- Não podemos simplesmente aplicar Hoeffding à hipótese escolhida $g$, porque $g$ não é uma hipótese fixada, é escolhida
+
+#### Hoeffding no contexto de ML
+
+- Devemos considerar a probabilidade de algumas hipóteses $h_m$ ser tal que $|E_{in}(h_m) - E_{out}(h_m)|> \epsilon$
+
+- Se tivermos $M$ hipóteses $h_1, h_2, \dots, h_M$ e escolhermos uma, que nós denotamos como $g$,
+  $$
+  \begin{align}
+  \mathbb{P}[|E_{in}(g) - E_{out}(g)|> \epsilon] & \leq \mathbb{P}[|E_{in}(h_1) - E_{out}(h_1)|> \epsilon \text{ or }  |E_{in}(h_2) - E_{out}(h_2)|> \epsilon \text{ or } \dots \text{ or } |E_{in}(h_M) - E_{out}(h_M)|> \epsilon]  \\
+  & \leq \sum^M_{m=1} \mathbb{P}[|E_{in}(h_m) - E_{out}(h_m)|> \epsilon] \\
+  & \leq 2e^{-2 \epsilon^2 N}
+  \end{align}
+  $$
+
+- Portanto, temos:
+  $$
+  P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 2Me^{-2 \epsilon^2N}
+  $$
+
+- **Consistente** com a nossa intuição:
+
+  - exponencial negativo $\rightarrow$ quanto maior o $N$, menor o bound
+
+- **Contrário** a nossa intuição:
+
+  - o tamanho do conjunto de hipóteses $M$ $\rightarrow$ quando maior o espaço de hipóteses $\mathcal{H}$, maior o bound
+
+  - questão: então deveríamos escolher um espaço de hipóteses pequeno?
+
