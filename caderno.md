@@ -696,6 +696,124 @@ $$
 - **Contrário** a nossa intuição:
 
   - o tamanho do conjunto de hipóteses $M$ $\rightarrow$ quando maior o espaço de hipóteses $\mathcal{H}$, maior o bound
-
   - questão: então deveríamos escolher um espaço de hipóteses pequeno?
+  
+- As boas notícias: podemos fazer o limite de Hoeffding ser arbitrariamente pequeno (**cenário de verificação**)
+
+- Se $M$ é inifinito, o limite será grande ­— sem significado (**cenário de aprendizado**)
+
+  - Podemos trocar o $M$ por um valor **finito**?
+
+#### Podemos melhorar $M$?
+
+- $M$ veio de várias uniões de probabilidade
+
+- Porém eventos ruins têm muitos overlaps
+
+  - $\Delta E_{out}$: mudança nas áreas $+1$ e $-1$
+  - $\Delta E_{in}$: mudança nas labels dos pontos dados
+
+- $|E_{in}(h_1) - E_{out}(h_1)| \approx |E_{in}(h_2) - E_{out}(h_2)|$
+
+- **A escolha de $g$ a partir de $\mathcal{H}$ é afetada por $D$ (dados de treinamento)**
+
+  - Geralmente, há muitas hipóteses $h_j$ similares que classificam as amostras $D$ da mesma maneira
+
+  - a
+
+- Para melhorar o limite, vamos substituiur o *union bound* com um que leva em consideração overlaps
+
+- Para isso, vamos **definir um "número"** que caracteriza a complexidade de $\mathcal{H}$
+
+  - **Conceitos importantes:**
+    - Dicotomia
+    - Função de crescimento
+    - Break point
+
+### Dicotomia
+
+- Em vez de considerar o espaço de entrada inteiro, consideramos um conjunto finito de pontos, e contamos o número de **dicotomias**
+
+Seja $X = \{ x_1, x_2, \dots, x_N \}$ ($N$ pontos)
+
+Seja $\mathcal{H}$ um espaço de hipóteses
+
+**Uma dicotomia gerada por $\mathcal{H}$:** qualquer bipartição de $X$ como $X_{-1} \cup X_{+1}$ que obedece uma determinada hipótese $h \in \mathcal{H}$:
+$$
+\mathcal{H}(x_1, x_2, \dots, x_N) = \{ (h(x_1), h(x_2), \dots, h(x_N))\ |\ h \in \mathcal{H} \}
+$$
+
+#### Mini-hipóteses
+
+- Uma hipótese: $h : \mathcal{X} \rightarrow \{ -1, +1\}$
+- Uma dicotomia $h : \{x_1, x_2, \dots, x_N \} \rightarrow \{ -1, +1\}$
+- Número de hipóteses $|\mathcal{H}|$ pode ser infinito
+- Número de dicotomias $| \{x_1, x_2, \dots, x_N \} |$ é no máximo $2^N$
+- Candidato para
+
+**Por que o número de dicotomias $\mathcal{H}(x_1, x_2, \dots, x_N)$ é no máximo $2^N$?**
+
+- Se você considerar outro conjunto de pontos, como $X' = \{x'_1, x'_2, \dots, x'_N \}$
+  1. $\mathcal{H}(x_1, x_2, \dots, x_N) = \mathcal{H}(x'_1, x'_2, \dots, x'_N)$?
+  2. $| \mathcal{H}(x_1, x_2, \dots, x_N) | = | \mathcal{H}(x'_1, x'_2, \dots, x'_N) |$?
+
+### Função de crescimento (growth function)
+
+A função de crescimento conta o **máximo** de dicotomias em quaisquer $N$ pontos
+$$
+m_{\mathcal{H}}(N) = \max_{x_1, \dots, x_n \in \mathcal{X}} |\mathcal{H} (x_1, \dots, x_N|
+$$
+A função de crescimento satisfaz: $m_{\mathcal{H}}(N) \leq 2^N$
+
+1. **Exemplo:** para o perceptron
+
+   - $m_{\mathcal{H}}(3) = 8$
+
+   - $m_{\mathcal{H}}(4) = 14$ (o problema do *xor*)
+   - $m_{\mathcal{H}}(N) = ?$
+
+2. **Exemplo:** positive rays
+
+   - $\mathcal{H}$ é um conjunto de $h: \mathbb{R} \rightarrow \{-1,+1\}$
+
+   - $h(x)= sign(x-a)$
+   - **$m_{\mathcal{H}}(N) = n+1$ (linear)**
+
+3. **Exemplo:** positive intervals
+
+   -  $\mathcal{H}$ é um conjunto de $h: \mathbb{R} \rightarrow \{-1,+1\}$
+
+   - Coloque as extremidades em dois dos $N+1$ pontos
+
+   - **$m_{\mathcal{H}}(N) = {N+1 \choose 2} + 1 = \frac{1}{2}N^2 + \frac{1}{2}N + 1$ (quadrático)**
+
+4. **Exemplo:** conjuntos convexos
+
+   -  $\mathcal{H}$ é um conjunto de $h: \mathbb{R}^2 \rightarrow \{-1,+1\}$
+   - $h(x) = +1$ é convexo
+   - **$m_{\mathcal{H}}(N) = 2^N$ (exponencial)**
+   - Os $N$ pontos são "fragmentados" pelos conjuntos convexos
+
+#### De volta à big picture...
+
+Tínhamos a seguinte desigualdade: $\mathbb{P}(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 2Me^{-2 \epsilon^2N}$
+
+- O que acontece se $m_{\mathcal{H}}$ substituir $M$? (O que ela diz sobre a expressividade do conjunto de hipóteses?)
+- $m_{\mathcal{H}}(N)$ polinomial $\implies$ BOM!
+- Basta provar que $m_{\mathcal{H}}(N)$ é polinomial? (Sem calcular explicitamente!)
+  - Se a função de crescimento for polinomial, o limite pode ser arbitrariamente pequeno!
+
+### Break point
+
+Se nenhum conjunto de dados $D$ de tamanho $k$ pode ser fragmentado por $\mathcal{H}$ ($\mathcal{H}$ consegue gerar todas as dicotomias sobre os $N$ pontos), então $k$ é um **break point** para $\mathcal{H}$
+$$
+m_{\mathcal{H}}(k) < 2^k
+$$
+
+1. Para perceptrons 2D, $k=4$ ­— não conseguimos gerar todas as dicotomias sobre esse conjuntos de dados
+2. Para o positive rays, break point $k=2$
+3. Para o positive intervals, break point $k=3$
+4. Para o convex sets, break point $k = \infty$
+
+- Se o *break-point* for finito, então a função de crescimento é polinomial
 
