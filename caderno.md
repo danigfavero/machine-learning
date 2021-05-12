@@ -817,3 +817,110 @@ $$
 
 - Se o *break-point* for finito, então a função de crescimento é polinomial
 
+### Provando que $m_{\mathcal{H}}(N)$ é polinomial
+
+- Para provar que $m_{\mathcal{H}}(N)$ é polinomial, vamos mostrar que $m_{\mathcal{H}}(N) \leq \dots \leq \dots \leq$ um polinômio
+
+- **Quantidade chave:** $B(N, k)$: número máximo de dicotomias de $N$ pontos, com *break-point* $k$
+
+  -  Computar $B(N, k)$ é muito custoso, vamos limitar $B(N, k)$!
+
+  - **Limite recursivo em $B(N, k)$**
+
+    - Considere $B(N, k) = \alpha + 2 \beta$
+
+      ![recursive bound table](/home/dani/Documents/ML/img/recursive-bound-table.png)
+
+      ($S_1$ não há repetições até $x_{N-1}$. $S_2$ há repetições até  $x_{N-1}$, sendo que $S_2^+$ tem $x_N$ positivo e $S_2^-$ tem $x_N$ negativo)
+
+    - **Estimando $\alpha$ e $\beta$**:
+
+      Focando nas $x_1, x_2, \dots, x_{N-1}$ colunas: 
+
+      $\alpha + \beta \leq B(N-1, k)$ (isso ocorre porque $\alpha + \beta$ são linhas de dicotomias sobre $N-1$ pontos)
+
+    - **Estimando $\beta$**:
+
+      Agora, focando nas linhas $S_2 = S_2^+ \cup S_2^-$:
+
+      $\beta \leq B(N-1, k-1)$ (isso ocorre porque $\beta$ não pode ser break-point $k$, afinal ele tem apenas $N-1$ pontos)
+
+    - **Portanto...**
+
+      $B(N, k) \leq B(N-1, k) + B(N-1, k-1)$ 
+
+  - **Solução analítica para o limite de $B(N,k)$**
+
+    **Teorema:** 
+    $$
+    B(N, k) \leq \sum^{k-1}_{i=0} {N \choose i} \\
+    \sum^{k-1}_{i=0} {N \choose i} = \sum^{k-1}_{i=0} {N-1 \choose i} + \sum^{k-2}_{i=0} {N-1 \choose i}
+    $$
+    (Prova por indução omitida)
+
+- **É POLINOMIAL!**
+
+  Para um dado $\mathcal{H}$, o break-point $k$ é fixado
+  $$
+  m_{\mathcal{H}}(N) \leq \underbrace{\sum^{k-1}_{i=0} {N \choose i}}_{\text{máxima potência é }N^{k-1}}
+  $$
+
+- 3 exemplos:
+
+  1. *positive rays* ($k = 2$)
+     $$
+     \begin{align}
+     m_{\mathcal{H}}(N) = n + 1 \leq n + 1
+     \end{align}
+     $$
+     
+
+  2. *positive intervals* ($k = 3$)
+     $$
+     m_{\mathcal{H}}(N) = \frac{1}{2}N^2 + \frac{1}{2}N + 1 \leq \frac{1}{2}N^2 + \frac{1}{2}N + 1
+     $$
+     
+
+  3. 2D perceptron ($k=4$)
+     $$
+     m_{\mathcal{H}} (N) = ? \leq \frac{1}{6}N^3 + \frac{5}{6}N + 1
+     $$
+
+- **Quando há *break-point* $k$, o número efetivo de hipóteses é limitado por um polinômio de ordem $N^{k-1}$**
+
+### Provando que $m_{\mathcal{H}}(N)$ pode substituir $M$
+
+- Em vez de $P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 2Me^{-2 \epsilon^2N}$, queremos $P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 2 m_{\mathcal{H}}(N) e^{-2 \epsilon^2N}$
+
+#### Como $m_{\mathcal{H}}(N)$ se relaciona com *overlaps*?
+
+- Espaço de todos os possíveis *datasets* de tamanho $N$
+  - Dada uma hipótese $h$, é possível computar $E_{in}(h)$ à respeito de cada *dataset*
+  - De acordo com Hoeffding, a probabilidade de ocorrer um evento "errado" (EX: $|E_{in}(h) - E_{out}(h)| > \epsilon $) acontecer é limitada
+  - Quando temos múltiplas hipóteses (UNION BOUND), devemos considerar a probabilidade de eventos "ruins" acontecerem associados a todos eles
+  - Como estamos considerando o *Union Bound*, *overlaps* não entram para a conta (então existem MUITOS eventos "ruins")
+  - Mas sabemos por Hoeffding que um *dataset* corresponde a múltiplos eventos "ruins"
+  - Pelas dicotomias, sabemos que o limite é muito maior do que Hoeffding propôs (há uma família de hipóteses)
+
+- A função de crescimento "agrupa hipóteses" de acordo com  seu comportamento em $D$
+- Isto estabelece a ligação entre *overlaps* e dicotomias
+
+#### O que fazer com $E_{out}$?
+
+- O evento $|E_{in}(h) - E_{out}(h)| > \epsilon $ depende não apenas de $D$, mas também do espaço $\mathcal{X}$ inteiro
+  - Como estamos "agrupando" hipóteses baseadas no comportamento de $D$,
+- Usar, além de $D$, um $D'$
+  - Queremos estimar $|E_{in}(h) - E_{out}(h)| \approx |E_{in}(h) - E'_{in}(h)|$
+
+#### Desigualdade Vapnik–Chervonenkis (VC)
+
+Após muitas manipulações matemáticas, chegamos em:
+$$
+P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}
+$$
+
+- Explicação da constante $2$ (multiplicando $N$):
+  - hipóteses são agrupadas no seu comportamento em $D$, mas seu comportamento fora de $D$ não é o mesmo
+  - Para rastrear $|E_{in}(h) - E_{out}(h)| > \epsilon $, rastreamos $|E_{in}(h) - E'_{in}(h)| > \epsilon $ (relativo a $D$ e $D'$, ambos de tamanho $N$)
+- Explicação das constantes $4$ e $\frac{1}{8}$:
+  - São fatores para levar em consideração as incertezas adicionadas quando substituímos $|E_{in}(h) - E_{out}(h)| > \epsilon $ por $|E_{in}(h) - E'_{in}(h)| > \epsilon $ 
