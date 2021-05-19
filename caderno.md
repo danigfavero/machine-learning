@@ -874,18 +874,16 @@ $$
      \end{align}
      $$
      
-
   2. *positive intervals* ($k = 3$)
      $$
      m_{\mathcal{H}}(N) = \frac{1}{2}N^2 + \frac{1}{2}N + 1 \leq \frac{1}{2}N^2 + \frac{1}{2}N + 1
      $$
      
-
   3. 2D perceptron ($k=4$)
      $$
      m_{\mathcal{H}} (N) = ? \leq \frac{1}{6}N^3 + \frac{5}{6}N + 1
      $$
-
+  
 - **Quando há *break-point* $k$, o número efetivo de hipóteses é limitado por um polinômio de ordem $N^{k-1}$**
 
 ### Provando que $m_{\mathcal{H}}(N)$ pode substituir $M$
@@ -924,3 +922,173 @@ $$
   - Para rastrear $|E_{in}(h) - E_{out}(h)| > \epsilon $, rastreamos $|E_{in}(h) - E'_{in}(h)| > \epsilon $ (relativo a $D$ e $D'$, ambos de tamanho $N$)
 - Explicação das constantes $4$ e $\frac{1}{8}$:
   - São fatores para levar em consideração as incertezas adicionadas quando substituímos $|E_{in}(h) - E_{out}(h)| > \epsilon $ por $|E_{in}(h) - E'_{in}(h)| > \epsilon $ 
+
+### Dimensão VC
+
+- A dimensão VC $d_{VC}(\mathcal{H})$ é o maior número de pontos que podem ser fragmentados por $\mathcal{H}$ (O maior valor de $N$ para o qual $m_{\mathcal{H}}(N) = 2^N$)
+- Se $k$ é um break point para $\mathcal{H}$, então $d_{VC}(\mathcal{H}) < k$
+- $d_{VC}(\mathcal{H}) +1$ é break point para $\mathcal{H}$
+
+**Exemplos**:
+
+- $\mathcal{H}$ é **positive rays** $\implies$ $d_{VC}(\mathcal{H}) = 1$
+- $\mathcal{H}$ é **positive intervals** $\implies$ $d_{VC}(\mathcal{H}) = 3$
+- $\mathcal{H}$ é **convex set**  $\implies$ $d_{VC}(\mathcal{H}) = \infty$
+
+- Seja $d$ a dimensão dos dados de entrada $x = (x_1, x_2, \dots, x_n)$
+
+#### Para perceptrons, $d_{VC} = d+1$
+
+Para provar isso, é suficiente provar que:
+
+- $d_{VC} \geq d+1$
+
+- $d_{VC} \leq d+1$
+
+- Provando que $d_{VC} \geq d+1$:
+
+  ​	Precisamos mostrar que existe um conjunto de $d+1$ pontos que podem ser fragmentados pelo perceptron
+
+  ​	Vamos escolher cuidadosamente (por construção) $d+1$ pontos, atribuir rótulos arbitrários em $\{ -1, +1 \}$ para cada um deles, e então mostrar que há uma hipótese que coincide com os rótulos
+
+  ​	Um conjunto de $N=d+1$ pontos em $\mathbb{R}^d$ fragmentados pelo perceptron:
+  $$
+  X =
+  \begin{bmatrix} — x_1^T — \\ — x_2^T —  \\ \vdots \\ — x_{d+1}^T —  \end{bmatrix}
+  =
+  \begin{bmatrix}
+  1 & 0 & 0 & \dots & 0 \\
+  1 & 1 & 0 & \dots & 0 \\
+   & \vdots & & \ddots & 0 \\
+  1 & 0 & \dots & \dots & 1 \\
+  \end{bmatrix}
+  $$
+  ​	$X$ é inversível.
+
+  ​	Para qualquer $y = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_{d+1} \end{bmatrix} = \begin{bmatrix} \pm 1 \\ \pm 1 \\ \vdots \\ \pm 1 \end{bmatrix}$,podemos encontrar um vetor $w$ satisfazendo $sign(Xw)=y$. Basta tomar $Xw = y$, que significa que $w = X^{-1}y$
+
+- Provando que $d_{VC} \leq d+1$:
+
+  Precisamos mostrar que nenhum conjunto com $d+2$ pontos pode ser fragmentado pelo perceptron
+
+  Vamos escolher qualquer conjunto de $d+2$ pontos e mostrar que sempre é possível construir uma dicotomia que não pode ser gerada por nenhuma das hipóteses
+
+  Para quaisquer $d+2$ pontos $x_1, \dots, x_{d+1}, x_{d+2}$: temos mais pontos do que dimensões, então temos: $x_j = \sum_{i \neq j} a_i x_i$ (é possível escrever como combinação linear dos demais)
+
+  Então, considere a seguinte dicotomia:
+
+  ​	$x_i$s com $a_i$ não nulo, tome $y_i = sign(a_i)$ e $x_j$ toma $y_j = -1$ 
+
+  ​	Nenhum perceptron consegue implementar tal dicotomia!
+
+  Portanto, 
+  $$
+  x_j = \sum_{i \leq j} a_i x_i \implies w^Tx_j = \sum_{i \leq j} a_i w^T x_i
+  $$
+  ​	Se $y_i = sign(w^Tx_i) = sign(a_i)$, então $a_i w^T x_i > 0$
+
+  ​	Isso força $w^T x_j = \sum_{i \neq j} a_i w^T x_i > 0$
+
+  ​	Portanto, $y_j = sign(w^Tx_j) = +1$
+
+- Note que o $d+1$ no perceptron é o número de parâmetros $w_0, w_1, \dots, w_n$
+
+#### A função de crescimento
+
+- Em termos da dimensão VC $d_{VC}$:
+
+$$
+m_{\mathcal{H}}(N) \leq \underbrace{\sum^{d_{VC}}_{i=0} {N \choose i}}_{\text{potência máxima é } N^{d_{VC}}}
+$$
+
+- É fácil de mostrar por indução que:
+
+  
+  $$
+  m_{\mathcal{H}}(N) \leq \sum^{d_{VC}}_{i=0} {N \choose i}\leq N^{d_{VC}}+1
+  $$
+
+- Portanto
+  $$
+  m_{\mathcal{H}}(2N) \leq (2N)^{d_{VC}}+1
+  $$
+
+#### Limite VC
+
+- Temos
+
+$$
+P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}
+$$
+
+- Então vamos rearranjar:
+  $$
+  \delta = 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2 N} \implies \epsilon = \sqrt{\frac{8}{N} \ln \frac{4 m_{\mathcal{H}}(2N)}{\delta}}
+  $$
+  
+- Se $P(|a-b| > \epsilon) \leq \delta$, então com probabilidade $1-\delta$ temos $|a-b| \leq \epsilon$, isto é $b - a \leq \epsilon \leq a-b$
+
+- Tomando $a = E_{in}$ e $b=E_{out}$, com probabilidade $1-\delta$ temos:
+
+$$
+E_{out} \leq E_{in} + \sqrt{\frac{8}{N} \ln \frac{4 m_{\mathcal{H}}(2N)}{\delta}}
+$$
+
+#### Observações
+
+- Erro de generalização
+
+  - Neste curso, faremos referência ao $|E_{in}(h) - E_{out}(h)$
+  - Na literatura, costuma ser $E_{out}(h)$
+
+- Generalização do limite VC
+
+  - Com probabilidade $\geq 1 - \delta$:
+
+  $$
+  \Omega = \sqrt{\frac{8}{N} \ln \frac{4 m_{\mathcal{H}}(2N)}{\delta}} \\
+  E_{out} \leq E_{in} + \Omega
+  $$
+
+- Proporções:
+
+  ![vc dimension](./img/vc-dimension.png)
+
+  - Gostaríamos de diminuir tanto o $E_{in}$ quanto o $\Omega$ baixos! $\implies$ vamos ter que encontrar um balanço
+
+#### Dimensão VC e aprendizado
+
+- $d_{VC}(\mathcal{H})$ é finito $\implies g \in \mathcal{H}$ vai generalizar
+- Independente do algoritmo de aprendizado
+- Independente da distribuição da entrada
+- Independente da função *target*
+
+#### Significado intuitivo da dimensão VC
+
+1. **Graus de liberdade**
+   - Parâmetros criam graus de liberdade: 
+     - número de parâmetros: análogo a graus de liberdade
+     - $d_{VC}$: equivalente "binário" dos graus de liberdade
+   - CUIDADO: não é **diretamente** relacionado ao número de parâmetros
+     - Alguns parâmetros podem não contribuir com graus de liberdade
+     - $d_{VC}$ mede o número de parâmetros EFETIVO
+
+#### Complexidade da amostra
+
+- Se $d_{VC}$ é finito, o aprendizado é generalizado
+
+  - Mas de quantas amostras vamos precisar?
+
+- Vamos examinar o comportamento de uma aproximação grosseira para o limite:
+  $$
+  P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}
+  $$
+
+  - Aproximação: $N^{d_{VC}} e^{-N}$ 
+
+  ![vc](./img/vc.png)
+
+  - Fixe $N^d e^{-N} = $ valor pequeno
+  - Como $N$ muda com $d$?
+  - Regra do dedão: $N \geq 10 d_{VC}$ 
+
