@@ -1092,3 +1092,124 @@ $$
   - Como $N$ muda com $d$?
   - Regra do dedão: $N \geq 10 d_{VC}$ 
 
+---
+
+### Bias-variance trade-off
+
+- Com a dimensão VC, tínhamos:
+
+$$
+E_{out}(g) \leq E_{in}(g) + \Omega(N, \mathcal{H}, \delta)
+$$
+
+
+
+- ***Fitting*/aproximação**: quando maior $\mathcal{H}$, melhor a aproximação
+- **Generalização**: quanto maior o $\mathcal{H}$, pior é a generalização
+
+#### A ideia do modelo
+
+- Outro modelo que tem a estrutura de *trade-off* entre aproximação e generalização
+- Bias se refere a hipótese média $\bar{g}$
+- Vamos definir $E_{out} = \text{bias} + \text{variância}$
+
+- Análise para o problema de regressão usando o erro quadrático médio
+
+#### Desenvolvendo o bias
+
+Começando com $E_{out}$:
+$$
+\begin{align}
+& E_{out}(g^{(\mathcal{D})}) = \mathbb{E}_x[(g^{(\mathcal{D})}(x) - f(x))^2] \\
+& \mathbb{E}_{\mathcal{D}}[E_{out}(g^{(\mathcal{D})})] = \mathbb{E}_{\mathcal{D}}[\mathbb{E}_{x}[(g^{(\mathcal{D})}(x) - f(x))^2]] \\
+& = \mathbb{E}_{x}[ \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2]]
+\end{align}
+$$
+Agora, vamos focar em:
+$$
+\mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2]
+$$
+
+- **A hipótese média**
+
+  Para avaliar $\mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2]$, vamos definir a **hipótese média $\bar{g}(x)$**:
+
+$$
+\bar{g}(x) = \mathbb{E}_{\mathcal{D}}[g^{(\mathcal{D})}(x)]
+$$
+
+​	Imagine **muitos** *datasets* $\mathcal{D}_1, \mathcal{D}_2, \dots, \mathcal{D}_K$
+$$
+\bar{g}(x) \approx \frac{1}{K} \sum^K_{k=1} g^{(\mathcal{D_k})}(x)
+$$
+
+- Usando $\bar{g}(x)$:
+  $$
+  \begin{align}
+  & \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2] = \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - \bar{g}(x) + \bar{g}(x) - f(x))^2] \\
+  &  = \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - \bar{g}(x))^2 + (\bar{g}(x) - f(x))^2 + 2(g^{(\mathcal{D})}(x) - \bar{g}(x))(\bar{g}(x) - f(x)) ] \\
+  & = \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - \bar{g}(x))^2] + (\bar{g}(x) - f(x))^2
+  \end{align}
+  $$
+
+- Então temos
+  $$
+  \mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2] = \underbrace{\mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x)}_{var(x)} - \underbrace{\bar{g}(x))^2] + (\bar{g}(x) - f(x))^2}_{bias(x)}
+  $$
+  (O **bias** diz respeito à discrepância em relação ao valor médio e ao melhor que você pode fazer. A **variância** é de fato a variância do bias. Ambos em relação a cada um dos $x$.)
+
+  Portanto:
+  $$
+  \begin{align}
+  & \mathbb{E}_{\mathcal{D}}[E_{out}(g^{(\mathcal{D})})] = \mathbb{E}_x [\mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - f(x))^2]] \\
+  & = \mathbb{E}_x[bias(x) + var(x)] \\
+  & = bias + var
+  \end{align}
+  $$
+
+#### O trade-off
+
+- $bias = \mathbb{E}_x[ (\bar{g}(x) - f(x))^2]$
+- $var = \mathbb{E}_x [\mathbb{E}_{\mathcal{D}}[(g^{(\mathcal{D})}(x) - \bar{g}(x))^2]]$
+
+![bias variance trade-off](./img/bias-variance-tradeoff.png)
+
+#### Comparando com a dimensão VC
+
+- **Análise VC:** $E_{in}$ é computado com respeito a um *dataset* $D$
+
+- **Análise bias-variance:** bias se refere a uma a uma hipótese média $\bar{g}$, com respeito a todos os *datasets* $D$ de tamanho fixo
+  - Portanto não pode ser calculado explicitamente
+
+---
+
+### Curvas de aprendizado
+
+Seja $\mathcal{D}$ um conjunto de dados de tamanho $N$, queremos estimar o melhor erro esperado possível, o erro empírico $E_{in}$ e o erro verdadeiro $E_{out}$.
+
+**As curvas:**
+
+![learning curve](./img/learning-curve.png)
+
+- A linha cinza é o melhor que podemos fazer, e não depende do tamanho da amostra
+- Quanto maior o tamanho da amostra, maior o $E_{in}$
+- Quanto maior o tamanho da amostra, menor o $E_{out}$
+
+**Como as curvas determinam as análises VC e *bias-variance*:**
+
+![vc versus bias-variance](./img/vc-vs-bias-variance.png)
+
+- As análises VC e *bias-variance* decompõem $E_{out}$ em dois termos
+
+- Eles podem ser interpretados de acordo com o ***trade-off* aproximação-generalização**
+  $$
+  \begin{matrix}
+  & & \text{aproximação} & & \text{generalização} \\
+  & & \downarrow & & \downarrow \\
+  E_{out} & \leq & E_{in} & + & \Omega \\
+  E_{in} & = & bias & + & var
+  \end{matrix}
+  $$
+
+- A expressividade de $\mathcal{H}$ deve ser combinada à quantidade de dados disponíveis
+
