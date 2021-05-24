@@ -1213,3 +1213,167 @@ Seja $\mathcal{D}$ um conjunto de dados de tamanho $N$, queremos estimar o melho
 
 - A expressividade de $\mathcal{H}$ deve ser combinada à quantidade de dados disponíveis
 
+---
+
+### Linear X non-linear
+
+- Examinando o espaço de hipóteses
+
+- Até agora vimos apenas funções lineares em nossos métodos
+
+- Funções não lineares: polinômios
+- Qualquer funçao $s: \mathbb{R}^d \rightarrow \mathbb{R} $ pode ser usada para classificação:
+  - $s<0 \implies$ classe := negativa
+  - $s>0 \implies$ classe := positivo
+  - $s=0 \implies$ fronteira de decisão
+- Dizer que um espaço de hipóteses de um algoritmo é linear implica em **linearidade de pesos**
+  - Por exemplo, note que $f_2(x_1, x_2) = w_0 + w_1x^2_1 + w_2x_1x_2$ é **não-linear** com respeito a $x_i$, mas é **linear** com respeito a $w_i$
+
+#### Transforme os dados não linearmente
+
+$(x_1, x_2) \rightarrow \Phi \rightarrow (x^2_1, x^2_2)$
+
+![non-linear](img/non-linear.png)
+
+**Mais formalmente...**
+$$
+x = (x_0, x_1, \dots, x_d) \rightarrow \Phi \rightarrow \ z = (z_0, z_1, \dots, z_\tilde{d})
+$$
+(A ideia é aumentar a dimensão!)
+
+Cada  $z_i=\Phi(x)$, $z = \Phi(x)$.
+
+Exemplo: $z = (1, x_1, x_2, x_1x_2, x_1^2, x_2^2)$
+
+Hipótese final $g(x)$ no espaço $\mathcal{X}$: $sign(\tilde{w}^T \Phi (x))$ ou $\tilde{w}^T \Phi (x)$
+
+#### O preço que pagamos:
+
+$$
+\begin{matrix}
+x = (x_0, x_1, \dots, x_d) & \rightarrow \Phi \rightarrow \ & z = (z_0, z_1, \dots, z_\tilde{d}) \\
+\downarrow & & \downarrow \\
+w & & \tilde{w} \\
+d_{VC} = d + 1 & & d_{VC} \leq \tilde{d} + 1
+\end{matrix}
+$$
+
+#### Conclusão
+
+- Modelos lineares são simples, mas têm habilidades limitadas para discriminar classes
+- Existem muitos algoritmos não lineares, como redes neurais, árvores de decisão, etc
+- Transformação não-linear aplicada aos dados
+  - Um tipo de transformação de features
+  - Alguns algoritmos, como SVM, explicitamente exploram esse fato
+  - Camadas de redes neurais podem ser interpretadas como entradas de transformadores de features
+
+---
+
+### Multiclass classification
+
+Problema com $C$ classes
+
+**Abordagem 1:** Combinar múltiplos classificadores binários
+
+- **OVA:** One versus All
+- **OVO:** One versus One
+
+#### OVA
+
+- um classificador para cada classe: $h_j$ é um classificador binário desginado a reconhecer objetos da classe j entre todos os objetos
+- um total de C classificadores binários: hj, j = 1, 2, \dots, C
+- assumir que cada classificador devolve um *score* entre [0,1] (exemplo: regressão logística)
+- **Decisão**: dado $x$, tome $\hat{y} = \arg\max_j \{ h_j(x) \}$
+
+#### OVO
+
+- um classificador para cada par de classes =: $h_{jk}$ é um classificador binário treinado usando apenas exemplos da classe $j$ (positiva) e $k$ (negativa)
+- total de $\frac{C(C-1)}{2}$ classificadores binários: $h_{jk}, j <k, j, k = 1, 2, \dots, C$ (note que para $k>j$, temos $h_{kj} = 1 - h_{jk}$)
+
+- assumir que cada classificador devolve um *score* entre [0,1]
+- **Decisão**: dado $x$, tome $\hat{y} = \arg\max_{j \in \{ 1, 2, \dots, C \}} \{ \sum^C_{k=1} h_{jk}(x) \}$
+
+#### Hard X soft classifiers
+
+- Note que OVO e OVA podem ser baseados em qualquer tipo de classificador binário
+
+  - Se o classificador devolve um valor de score (ou seja, uma estimativa de $P(y|x)$), então as regras dadas anteriormente podem ser utilizadas
+
+- E se utilizássemos **classificadores hard** em vez de **classificadores soft**?
+
+  - **Classificador hard:** saída em $\{ 0, 1 \}$ (rótulo de classe $y$)
+  - **Classificador soft:** saída em $[0,1]$ (probabilidade condicional $P(y|x)$)
+
+- Podemos usar, por exemplo, o **voto da maioria**
+
+  - Voto pode lgerar **regioẽs com classificação indefinida**
+
+    ![ova](img/ova.png)
+
+  - A região triangular no centro não receberá nenhuma classificação
+
+#### Emsemble of classifiers
+
+- A ideia de combinar classificadores
+
+### Softmax
+
+**Abordagem 2:** Algoritmos inerentemente multiclasses
+
+#### Regressão logística multinomial
+
+- A generalização da regressão logística para múltiplcas classes
+- Para estimar s probabilidades condicionais utilizamos a **função softmax**:
+
+$$
+\hat{p}_j = \hat{P}(y=j|x) = \frac{e^{w_j^Tx}}{\sum^C_{i=1} e^{w_i^Tx}}, j=1, 2, \dots, C
+$$
+
+
+
+![softmax](img/softmax.png)
+
+#### Função de custo para o caso multiclasse
+
+- **One-hot enconding** da saída:
+
+  Para cada entrada $x^{(i)}$, a saída é um vetor $y^{(i)} = (y_1^{(i)}, y_2^{(i)}, \dots, y_C^{(i)})$ com $y_j^{(i)}= 1 \iff x^{(i)}$ é da classe $j, j = 1, 2, \dots, C$
+
+- **Cross-entropy loss** (entradas wrt $x^{(i)} \in D$):
+  $$
+  \sum^N_{i=1} \sum^C_{j=1} y_j^{(i)} \log \hat{p}_j^{(i)}
+  $$
+  Note que: $ \hat{p}_j^{(i)} = \hat{P}(y^{(i)} = j | x^{(i)}),\ \sum^C_{j=1}\hat{p}_j^{(i)} = 1$, e os parâmetros a serem otimizados, $w_j$, são aqueles na função *softmax*
+
+---
+
+### Overfitting/underfitting
+
+- Lembrando que, em *machine learning*, o que importa é o $E_{out}$
+- Generalizando, tentamos minimizar $E_{in}$ esperando minimizar $E_{out}$
+- Em geral: $E_{out} = E_{in} + \text{generalization_error}$
+
+- O $E_{in}$ costuma diminuir conforme mais se treina o algoritmo
+- **Overtraining** pode resultar em **overfitting**
+- Nem sempre é relacionado ao número de iterações, pode ser gerado pela **complexidade do modelo** (relacionado ao quão adequado é o espaço de hipóteses escolhido)
+
+![fitting](img/fitting.png)
+
+#### Erro de validação
+
+- Para verificar $E_{out}$, utilizamos o conjunto de validação para computar o $E_{val}$
+  - $E_{val}$ é um *proxy* do $E_{out}$
+  - Examinando o $E_{val}$ é possível detectar overfitting
+
+- **Underfitting:** tanto $E_{in}$ quanto $E_{val}$ são grandes 
+- **Overfitting:** enquanto $E_{in}$ diminui, o $E_{val}$ continua grande
+
+#### Como lidar com overfitting
+
+- **Regularização** — adicionar um termo de penalidade na função de custo 
+- **Validação** — erro do conjunto de validação ($E_{val}$) pode ser usado para escolher uma família de hipóteses $\mathcal{H}$ de complexidade adequada
+
+$$
+\underbrace{E_{out}(h)}_{\text{validação estima esta quantidade}} = E_{in}(h) + \underbrace{\text{overfit penalty}}_{\text{regularização estima esta quantidade}}
+$$
+
