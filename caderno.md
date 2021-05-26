@@ -1377,3 +1377,258 @@ $$
 \underbrace{E_{out}(h)}_{\text{validação estima esta quantidade}} = E_{in}(h) + \underbrace{\text{overfit penalty}}_{\text{regularização estima esta quantidade}}
 $$
 
+## Redes neurais
+
+- Para os mesmos problemas de regressão logística
+
+**Estrutura:**
+
+![img](https://www.neuraldesigner.com/images/deep_neural_network_big.png)
+
+- Camada de **entrada**, camadas **ocultas** e camadas  de **saída**
+
+- Cada nó da rede é um **neurônio** (uma máquina linear)
+
+  $\varphi ( w_1\varphi(s_1) + w_2\varphi(s_2) + w_3\varphi(s_3) + w_4\varphi(s_4))$
+
+- **Forward pass** 
+
+  $\hat{y} = \sum l (y_j, \hat{y}_j)$
+
+- **Backward pass**
+
+**Nomenclatura:**
+
+- *Multilayer perceptron networks* (MLP), ou
+- *Feedforward multilayer neural networks*
+
+### Perceptron 
+
+- O perceptron como neurônio:
+
+  ![neuron](img/neuron.png)
+
+- O perceptron (camada única, como vimos) é uma máquina linear $g(x) +$ decisão $\phi$
+
+  $\text{output}= \phi(g(x))=\phi(w^Tx)$
+
+- **Função do sinal:**
+
+  $\phi(x) = \cases{+1, \text{ se } z>0 \\ -1, \text{ se } z \leq 0 }$
+
+- **Função de passo:**
+
+  $\phi(x) = \cases{1, \text{ se } z>0 \\ 0, \text{ se } z \leq 0 }$
+
+- Implementação da função $OR$ com o perceptron
+
+- Implementação da função $AND$ com o perceptron
+
+- **$XOR$ não é linearmente separável**
+
+  - Basta usar duas funções lineares: 3 perceptrons ($g_1, g_2$ e $f$ que descreve o operador lógico $AND/OR$)
+
+    $f = g_1\bar{g_2} + \bar{g_1}g_2$
+
+  ![perceptron xor](img/perceptron-xor.png)
+
+- A função $XOR$ permite criar uma **rede de duas camadas** de perceptron
+
+**O perceptron multilayer**
+
+![perceptron xor net](img/perceptron-xor-net.png)
+
+- 3 camadas "*feedforward*"
+
+**Configurações mais complexas**
+
+- Se quiser algo mais refinado, basta aumentar o número de retas (de perceptrons)
+
+### Múltiplos hiperplanos
+
+- Sejam $p$ funções lineares dadas por $g_i$. Cada função define um perceptron $\phi(g_i(x))$, e vamos considerá-los comos os nós da primeira camada oculta
+
+- A saída da primeira camda é um elemento em $y \in \mathbb{R}^p$
+  $$
+  y = (\phi(g_1(x)), \phi(g_2(x)), \dots, \phi(g_p(x))) = (y_1, y_2, \dots, y_p)
+  $$
+
+- Já que $\phi (\cdot) \in \{0,1\}, (y_1, y_2, \dots, y_p)$ é um vértice do hipercubo unitário $H_p$ em $\mathbb{R}^p$
+- Isso implica que todos os pontos de $X = \mathbb{R}^d$ em uma região particular (dentre aqueles definidos por $g_i()$) são mapeados para um mesmo vértice de $H_p$
+
+- Podemos utilizar um **classificador linear** em $H_p$ — isso separaria alguns vértices como positivos e os outros como negativos
+- O efeito disso é a classificação das regiões como $0$ ou $1$
+- Mas as classes das regiões podem corresponder a uma configuração $XOR$ em $H_p$
+
+#### Rede de 3 camadas de perceptron
+
+- Em vez de utilizar apenas um classificador linear na segunda camada, podemos utilizar $k$ nós, um em cada vértice correspondendo a uma região da classe $1$ (isso pode ser facilmente implementado pela função $AND$)
+- Então, adicionamos uma terceira camada que irá computar o $OR$ das saídas da camada anterior
+
+- **Camadas:**
+  - **PRIMEIRA CAMADA:** cada nó define um hiperplano em $\mathbb{R}^d$
+    - O conjunto de hiperplanos define poliedros (regiões) 
+    - A saída da primeira camadas é um vértice de um hipercubo em $\mathbb{R}^d$.
+  - **SEGUNDA CAMADA:** cada nó seleciona um vértce no hipercubo, que corresponde à região (poliedro) em $\mathbb{R}^d$
+    - Um nó para cada região de interesse
+  - **TERCEIRA CAMADA:** os nós são unidos (via $OR$) às saídas da camada anterior
+    - Se o input é uma das regiões selecionadas, então o output será positivo
+- **Conclusão:** com 3 camadas de perceptron, é possível representar qualquer união de poliedros definidos em $\mathbb{R}^d$
+
+**No entanto...**
+
+- Um número imenso de perceptrons seria necessário para aproximar fronteiras com curvas suaves
+- Números altos de nós na segunda camada também
+- Não há algoritmo para desenvolver tal rede
+
+#### Redes neurais multi-layer
+
+- Em cada neurônio (perceptron) adicionamos uma função de ativação $\phi$ (função de passo ou sinal) com uma função contínual e diferenciável
+
+- A rede neural:
+
+  ![nn](img/nn.png)
+
+#### Teorema da aproximação universal 
+
+- **Cybenko, G**: "Qualquer função contínua pode ser aproximada por uma sobreposição de funções sigmoides"
+  $$
+  F(x) = \sum^N_{i=1}v_i \varphi (w_i^Tx+b_i)
+  $$
+
+- Portanto, teoricamente, qualquer função contínua pode ser aproximada por uma rede neural com uma camada oculta
+
+### Algoritmo de *backpropagation*
+
+(*Multilayer feedforward network training*)
+
+Queremos encontrar um $w$ que minimiza uma função de custo $J(w)$.
+
+Vamos supor uma rede com $c$ saídas e a seguinte função de perda:
+$$
+J(w) = \frac{1}{2}\sum^c_{k=1} (t_k - z_k)^2
+$$
+
+- $t_k$: saída esperada (*target*)
+- $z_k$: saída predita (resultado do *forward pass*)
+
+**Notações:**
+
+Vamos considerar um nó geral $j$ na rede:
+
+![node](img/node.png)
+
+- $x_{ji}$ é a $i$-ésima entrada do nó $j$
+
+- $w_{ji}$ é o peso relativo à $i$-ésima entrada do nó $j$
+  $$
+  \begin{matrix}
+  s_j = \sum_i w_{ji} x_{ji} & z_j = \phi(s_j) & (x_{ji} = z_i)
+  \end{matrix}
+  $$
+
+#### Computação do gradiente
+
+**Gradiente de $J$ com respeito a $w_{ji}$:**
+
+$w_{ji}$ influencia o resto da rede por meio de $s_j$:
+
+$$
+\frac{\partial J}{\partial w_{ji}} = \frac{\partial J}{\partial  s_j} \frac{\partial s_j}{\partial w_{ji}}
+$$
+Como $s_j = \sum_i w_{ji}x_{ji}$, então
+$$
+\frac{\partial J}{\partial w_{ji}}= \frac{\partial J}{\partial  s_j} x_{ji}
+$$
+Se $j$ é um nó na camada de saída, assim como $w_{ji}$ pode influenciar o resto da rede apenas por meio de $s_j$, $s_j$ pode influenciar o resto das redes apenas por meio de $z_j (z_j = \phi(s_j))$
+$$
+\frac{\partial J}{\partial  s_j} = \frac{\partial J}{\partial  z_j}  \frac{\partial z_j}{\partial s_j}
+$$
+Se o nó $j$ está em alguma das outras camadas anteriores, então $s_j$ afeta $J$ por meio de todos os nós $k$ na camada subsequente:
+$$
+\frac{\partial J}{\partial  s_j} = \sum_k \frac{\partial J}{\partial  s_k}  \frac{\partial s_k}{\partial s_j}
+$$
+
+#### Pesos relacionados aos nós da camada de saída
+
+Suponha que $j$ é um nó na camada de saída
+
+$s_j$ afeta $J$ por meio de $z_j$ 
+$$
+\frac{\partial z_j}{\partial  s_j} = \frac{\partial \phi(s_j)}{\partial  s_j} = \phi'(s_j)
+$$
+
+$$
+\frac{\partial J}{\partial  z_j} = \frac{\partial}{\partial  z_j} [\frac{1}{2} \sum^c_{k=1}(t_k - z_k)^2] = \frac{1}{2} 2(t_j - z_j) \frac{\partial (t_j - z_j}{\partial z_j} = - (t_j - z_j)
+$$
+
+Portanto
+$$
+\frac{\partial J}{\partial w_{ji}}= \frac{\partial J}{\partial  s_j} x_{ji} = - \underbrace{(t_j - z_j) \phi'(s_j)}_{\delta_j} x_{ji}
+$$
+
+#### Pesos relacionados aos nós das camadas ocultas
+
+Suponha que $j$ é um nó de uma camada oculta
+
+Devemos considerar todas as maneiras na quais $s_j$ afeta $J$ (cada nó para onde sua saída é propagada)
+$$
+\begin{align}
+\frac{\partial J}{\partial  s_j} & = \sum_k \frac{\partial J}{\partial  s_k}  \frac{\partial s_k}{\partial s_j} =  \sum_k  - \delta_k \frac{\partial s_k}{\partial s_j} =  \sum_k  - \delta_k \frac{\partial s_k}{\partial s_j} \frac{\partial z_j}{\partial s_j} \\
+& =  \sum_k  - \delta_k w_{kj} \frac{\partial z_j}{\partial s_j} =  \sum_k  - \delta_k w_{kj} \phi'(s_j)
+\end{align}
+$$
+Portanto
+$$
+\frac{\partial J}{\partial w_{ji}}= \frac{\partial J}{\partial  s_j} x_{ji} = - \underbrace{[\sum^c_{k=1} w_{jk} \delta_k]  \phi'(s_j)}_{\delta_j} x_{ji}
+$$
+
+
+#### Conclusão
+
+$$
+w(r+1) = w(r) + \Delta w(r) \\
+\Delta w (r) = - \eta \nabla J(w)
+$$
+
+Se $k$ é um nó na camada de saída:
+$$
+\Delta w_{kj} = \eta \underbrace{(t_k - z_k) \phi' (s_k)}_{\delta_k} x_{kj}
+$$
+Se $j$ é um nó na última camada oculta:
+$$
+\Delta w_{ji} = \eta \underbrace{[\sum^c_{k=1} w_{jk} \delta_k] \phi' (s_j)}_{\delta_j} x_{ji}
+$$
+![image-20210527164307206](img/net-node.png)
+
+Se considerarmos a sigmoide como função de ativação $\phi$:
+$$
+\delta_k = z_k (1 - z_k)(t_k - z_k) \\
+\delta_j = z_j(1 - z_j) \sum^c_{k=1} w_{kj} \delta_k
+$$
+
+### Comentários
+
+- (Resultado teórico) Redes neurais com três camadas podem representar funções arbitrárias (uma camada oculta)
+- O princípio de *backpropagation* é o mesmo para qualquer função de custo (nós consideramos a MSE)
+  - Precisa ser diferenciável
+- O gradiente descendente pode convergir para um mínimo local
+- Camadas ocultas podem ser entendidas como representações transformadas implícitas dos dados de entrada
+- Treinar redes neurais não é simples porque há muitos **hiper parâmetros** que precisam ser especificados antes do treinamento
+  - arquitetura da rede
+  - função de ativação
+  - função de custo
+  - normalização dos dados
+  - regularização
+  - treinamento em *batches* X estocástico
+  - critério de parada
+  - taxa de aprendizado, momento
+
+### Bibliotecas
+
+- TensorFlow – https://www.tensorflow.org
+
+- Keras – https://keras.io
+
+- PyTorch – https://pytorch.org
+
