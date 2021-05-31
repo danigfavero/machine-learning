@@ -1,4 +1,4 @@
-# MAC0460 - Introdução ao Aprendizado de Máquina
+MAC0460 - Introdução ao Aprendizado de Máquina
 
 Oferecimento da disciplina no primeiro semestre de 2021, com a professora Nina S. T. Hirata, no Instituto de Matemática e Estatística da USP.
 
@@ -1631,4 +1631,178 @@ $$
 - Keras – https://keras.io
 
 - PyTorch – https://pytorch.org
+
+## Avaliação de performance
+
+Uma vez que uma hipótese $g$ é selecionada, como estimamos sua performance?
+
+- Para isso, precisamos de um *dataset* independente $D_{test}$ ($D_{test}$ é um conjunto com amostras que não estão em $D_{train}$)
+
+- $E_{out}$ pode ser estimado como $E_{in}$, mas sobre o conjunto $D_{test}$
+
+- $E_{in}$ e $E_{out}$ estão relacionados à função de perda
+- Frequentemente, é conveniente avaliar outras métricas de performance
+
+### Regressão
+
+- Otimizamos a MSE durante o treinamento para obter $g$
+- $g$ pode ser avaliada no $D_{test}$ em termos de
+  - MSE
+  - MAE
+  - coeficiente de determinação (R quadrado)
+
+### Classificação
+
+- Otimizamos a perda *cross-entropy* durante o treinamento para obter $g$
+
+- As saídas de $g$ são um score que pode ser interpretado como $P(y=1|x)$
+
+- Uma decisão óbvia seria
+  $$
+  \hat{y} = \cases{1, \text{ se } g(x) > 0.5, \\ 0, \text{ se } g(x) \leq 0.5}
+  $$
+
+### Tipos de erro em problemas de classificação binária
+
+- Classes: positiva e negativa
+
+- **4 casos possíveis:**
+
+  - Positivo Verdadeiro  ($TP$)
+
+    $y = 1$ e $\hat{y} = 1$
+
+  - Positivo Falso ($FP$)
+
+    $y = 0$ e $\hat{y} = 1$
+
+  - Negativo Falso ($FN$)
+
+    $y = 1$ e $\hat{y} = 0$
+
+  - Negativo Verdadeiro ($TN$)
+
+    $y = 0$ e $\hat{y} = $0
+
+- Métricas derivadas desses casos:
+  - **Matriz de confusão**
+  - **Precisão** = $TP/(TP + FP)$
+  - **Recall** = $TP/(TP + FN)$
+  - **False positive rate (FPR)** = $FP/(FP + TN)$
+  - **Acurácia** = $(TP + TN)/(TP + FP + TN + FN)$
+  - **F1-score** = $2 * (\text{Precisão} * \text{Recall})/(\text{Precisão} + \text{Recall})$
+
+#### E em problemas de classificação multiclasse?
+
+Seja $TP_j, FP_j, TN_j, FN_j$, para cada $j$ (classe $j$ contra o resto)
+
+- ***Micro-averaging***
+  - Compute $TP = \sum TP_j$, $FP = \sum FP_j$, $TN = \sum TN_j$, $FN = \sum FN_j$
+  - Compute a métrica performance de cada $TP, FP, TN, FN$
+  - Atribui a mesma importância para cada exemplo — classes maiores dominam
+- ***Macro-averaging***
+  - Compute a métrica de performance para cada classe, de $TP_j,  FP_j, TN_j, FN_j$
+  - Compute a média de cada métrica
+  - Atribui mesma importância a todas as classes
+
+#### Aceitar falsos negativos ou falsos positivos?
+
+-  $TP, FP, TN, FN$ depende do limite $T$
+  $$
+  \hat{y} = \cases{1, \text{ se } g(x) > 0.5, \\ 0, \text{ se } g(x) \leq 0.5}
+  $$
+
+  - No caso do exemplo acima, $T = 0.5$
+  - Podemos escolher outros valores diferentes de $0.5$ para o limite $T$
+
+- Se for melhor aceitar $FP$ do que $FN$, então $T$ deve ser baixo
+
+- Se for melhor aceitar $FN$ do que $FP$, então $T$ deve ser alto
+
+- Frequentemente queremos maximizar os $TP$
+
+  - *recall* alto
+
+- Ao mesmo tempo, queremos minimizar $FP$
+
+  - pequeno FPR (alta precisão)
+
+- **Curva ROC** e **curva PR** são frequentemente utilizadas como ferramentas para atender *recall* e precisão simultaneamente
+
+#### Curva ROC *(Receiver operating characteristic)*
+
+![thresold](https://cdn-images-1.medium.com/max/800/1*hf2fRUKfD-hCSw1ifUOCpg.png)
+
+- $T = 1.0 \implies$ todos os dados são classificados como negativos ($TP=0\%$ e $FP=0\%$)
+- $T = 0.0 \implies$ todos os dados são classificados como positivos ($TP=100\%$ e $FP=100\%$)
+
+Enquanto variamos $T$ entre $1.0$ e $0.0$:
+
+- **Classes perfeitamente separadas**: $TP$ chega a $100\%$ enquanto $FP$ fica em $0\%$, e apenas depois disso $FP$ começa a aumentar
+- **Caso geral**: $TP$ começa a aumentar, mas a $FP$ também
+
+![roc](https://analyticsindiamag.com/wp-content/uploads/2019/09/roc.png)
+
+**AUC ROC** (Área sob curva ROC)
+
+- É frequentemente utilizada como métrica de performance
+- **AUC** varia de $0.5$ a $1.0$
+- Quanto mais perto de $1.0$, melhor o classificador
+- Mas a **AUC** pode ser *misleading* quando o *dataset* está desbalanceado
+
+#### Curva PR (*precision-recall*)
+
+- Não depende do desbalanceamento entre as classes
+
+### Na prática, como escolher uma hipótese?
+
+- Qual espaço de hipóteses usamos?
+- Qual algoritmo devemos usar?
+- Como os hiper parâmetros devem ser ajustados?
+
+Podemos usar 3 tipos de *datasets* para estimar o erro de hipótese:
+
+- Treinamento ($E_{in}$)
+- Validação ($E_{val}$)
+- Teste ($E_{test}$)
+
+Eles são computados em momentos diferentes:
+
+- Durante o treinamento computamos $E_{in}$
+- Para a seleção de hipóteses, computamos $E_{val}$
+- Para estimar $E_{out}$ a partir do modelo selecionado computamos $E_{test}$
+
+Ambos $E_{val}$ e $E_{test}$ são estimações de $E_{out}$
+
+- $E_{val}$ é otimista (enviesado)
+- $E_{test}$ não é viesado
+
+#### Estimando $E_{out}$
+
+- Particione o *dataset* existente em dois subconjuntos:
+  $$
+  D = D_{train} \cup D_{test}
+  $$
+  ![dtrain dtest](img/dtrain-dtest.png)
+
+- $D_{train}$ é usado para treinamento e para computar $E_{in}$
+- $D_{test}$ é usado para computar $E_{test}$, uma estimativa não viesada de $E_{out}$
+
+#### Potenciais problemas de $E_{test}$ como estimador de $E_{out}$
+
+​	Seja o tamanho dos conjuntos: $|D_{train}|$, $|D_{test}|$ e $|D| = |D_{train}| + |D_{test}|$
+
+- $|D_{test}|$ grande $\implies |D_{train}|$ pequeno ( a hipótese não é boa)
+- $|D_{test}|$ pequeno $\implies E_{test}$ dificilmente será uma boa estimativa de $E_{out}$
+- quando $D_{train}$ e/ou $D_{test}$ tem algum viés
+
+**Problemas quando usamos $E_{test}$ para selecionar uma hipótese final**
+
+- $E_{test}$ da hipótese escolhida passa a ser um estimador otimistamente enviesado de $E_{out}$
+
+### Nas próximas aulas...
+
+- Conjuntos de validação são comumente usados para escolher uma hipótese final do conjunto de hipóteses pré-selecionadas, baseadas em $E_{val}$ 
+- Métodos de ***cross-validation*** para reduzir a variância do $E_{val}$
+- Conjunto de teste pode ser usado para fazer uma estimativa não viesada do $E_{out}$ (se $D$ estiver disponível...)
 
