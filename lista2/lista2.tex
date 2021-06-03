@@ -1,0 +1,123 @@
+\documentclass[a4paper,11pt]{article}
+\setlength{\textwidth}{6.3in}
+\setlength{\oddsidemargin}{-.125in}
+\setlength{\evensidemargin}{-.125in}
+\newcommand\tab[1][.5cm]{\hspace*{#1}}
+\usepackage[bottom=1in,top=1in]{geometry}
+
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{amsthm,amssymb,amsmath}
+
+
+\title{%
+    Lista de Exercícios 2\\
+    \large MAC0460 - Introdução ao Aprendizado de Máquina
+}
+\author{Daniela Gonzalez Favero - 10277443}
+\date{07 de Junho de 2020}
+
+\begin{document}
+
+    \maketitle
+    
+    \begin{enumerate}
+        \item O diagrama como um todo ilustra os componentes do aprendizado de máquina. A \textit{Unknown Target Function} é a função $f$ (que geralmente não pode ser expressa de forma analítica) que mapeia os dados de entrada $X$ para os dados de saída $Y$; e isto é feito a partir de uma distribuição de probabilidade $P$ sobre $X$ (que também não será obtida explicitamente). Os \textit{Training Examples} são os pares entrada-saída de $X$ e $Y$, definidos por $(x_1, y_1), \dots, (x_N, y_N)$. O \textit{Hypothesis Set} é o espaço $\mathcal{H}$ que contém as hipóteses que serão testadas como aproximações da \textit{target function} $f$. O \textit{Learning Algorithm} é o algoritmo $\mathcal{A}$ que utilizará os exemplos de treinamento para encontrar uma hipótese (a partir de $\mathcal{H}$) que os modele de forma mais precisa (mais parecida com $f$). Finalmente, a \textit{Final Hypothesis} é a hipótese escolhida por $\mathcal{A}$ como a melhor aproximação de $f$ para o conjunto de dados examinado.
+        
+        \item $E_{in}$ é o erro empírico, calculado a partir da discrepância entre a função $f$ (que mapeia os dados de entrada para os dados de saída) e a função $f^*$, encontrada pelo algoritmo de aprendizado a partir da amostra fornecida. Já $E_{out}$ é o erro verdadeiro, calculado (apenas teoricamente) a partir da discrepância entre a \textit{target function} (que de fato mapeia a população inteira dos dados no mundo real) e a hipótese final aprendida pelo algoritmo.
+        
+        \item O valor $| E_{in} - E_{out} |$ expressa o quão bem a amostra de dados obtidos representa a população: quanto menor este valor, mais perto da distribuição da população a distribuição da amostra estará. É interessante investigá-lo porque ele avalia o quão bem a hipótese escolhida no aprendizado de máquina irá se comportar fora do conjunto de treinamento.
+        
+        \item A desigualdade de Hoeffding com respeito a uma certa hipótese $h$ afirma que a probabilidade de $E_{in}$ não ter valor muito próximo de $E_{out}$ (ou seja, $| E_{in} - E_{out} | > \epsilon$, com $\epsilon$ positivo e muito pequeno) é limitada pelo tamanho da amostra $N$, mais especificamente, limitada pela expressão $2e^{-2 \epsilon^2N}$. Portanto, quanto maior o $N$, menor é o \textit{bound}.
+        
+        \item A desigualdade de Hoeffding com respeito a uma certa hipótese de um espaço com $M$ hipóteses afirma que a probabilidade de $E_{in}$ não ter valor muito próximo de $E_{out}$ (ou seja, $| E_{in} - E_{out} | > \epsilon$, com $\epsilon$ positivo e muito pequeno) é limitada pelo tamanho da amostra $N$ e pelo tamanho do conjunto de hipóteses $M$, do qual estamos escolhendo hipóteses $g$ para o aprendizado. Mais especificamente, a probabilidade é limitada pela expressão $2Me^{-2 \epsilon^2N}$, ou seja, quando maior o $N$ e quanto menor o $M$, menor é o \textit{bound}. A diferença deste item para o anterior, é que antes a hipótese $h$ considerada era fixa, e agora temos várias hipóteses $h_1, h_2, \dots, h_M$ sendo consideradas (que é o que de fato ocorre no contexto de aprendizado de máquina).
+        
+        \item \textit{Union-bound} é o valor de \textit{bound} obtido ao se fazer união das probabilidades de $| E_{in} - E_{out} | > \epsilon$ para cada hipótese $h_i, i = 1, \dots, M$. Ou seja, se escolhermos uma hipótese $g$, temos:
+        \[
+            \begin{array}{rl}
+                \mathbb{P}[|E_{in}(g) - E_{out}(g)|> \epsilon] \leq & \mathbb{P}[|E_{in}(h_1) - E_{out}(h_1)|> \epsilon \\
+                & \text{ or }  |E_{in}(h_2) - E_{out}(h_2)|> \epsilon \\
+                & \text{ or } \dots \\
+                & \text{ or } |E_{in}(h_M) - E_{out}(h_M)|> \epsilon]  \\
+                \leq & \sum^M_{m=1} \mathbb{P}[|E_{in}(h_m) - E_{out}(h_m)|> \epsilon] \\
+                \leq & 2Me^{-2 \epsilon^2 N}.
+            \end{array}
+        \]
+        
+        \item Seja o conjunto $X = \{ x_1, x_2, \dots, x_N \}$ e um espaço de hipóteses $\mathcal{H}$, uma \textbf{dicotomia} gerada por $\mathcal{H}$ é qualquer bipartição de $X$ como $X_{-1} \cup X_{+1}$ que obedece uma determinada hipótese $h \in \mathcal{H}$:
+        \[
+            \mathcal{H}(x_1, x_2, \dots, x_N) = \{ h(x_1), h(x_2), \dots, h(x_N) | h \in \mathcal{H} \}.
+        \]
+
+        A \textbf{\textit{growth-function}} conta o máximo de dicotomias em quaisquer $N$ pontos:
+        \[
+            m_{\mathcal{H}}(N) = \max_{x_1, \dots, x_N \in X} |\mathcal{H} (x_1, \dots, x_N)|.
+        \]
+        
+        Se nenhum conjunto de dados $D$ de tamanho $k$ pode ser \textit{``shattered''} por $\mathcal{H}$ ($\mathcal{H}$ consegue gerar todas as dicotomias sobre os $N$ pontos), então $k$ é um \textbf{\textit{break point}} para $\mathcal{H}$.
+        
+        Esses conceitos se relacionam pois, primeiramente, as definição de \textit{growth-function} e \textit{break point} utilizam o conceito de dicotomias. Além disso, podemos relacionar a \textit{growth-function} e o \textit{break point} com a seguinte expressão:
+        \[
+            m_{\mathcal{H}}(k) < 2^k.
+        \]
+        
+        \item \textbf{O processo envolvido na troca do $M$ pela \textit{growth-function}} começa relacionando dicotomias e \textit{overlaps}: dentro de todos os possíveis \textit{datasets} de tamanho $N$ e dada uma hipótese $h$, é possível computar $E_{in}(h)$ à respeito de cada \textit{dataset}. De acordo com Hoeffding, a probabilidade de ocorrer um evento ``errado'' (por exemplo, $|E_{in}(h) - E_{out}(h)| > \epsilon $) acontecer é limitada. Quando temos múltiplas hipóteses, devemos considerar a probabilidade de eventos ``ruins'' acontecerem associados a todos eles (a partir do \textit{Union bound}). Como estamos considerando o \textit{Union Bound}, \textit{overlaps} não entram para a conta, portanto existe uma imensa quantia de eventos ``ruins''. No entanto, sabemos por Hoeffding que um \textit{dataset} corresponde a múltiplos eventos ``ruins'' e pelas dicotomias, sabemos que o limite é muito maior do que Hoeffding propôs (afinal, há uma família de hipóteses). Então, a \textit{growth-function} ``agrupa'' hipóteses de acordo com  seu comportamento em $D$. 
+        
+        Além disso, é importante notar que o evento $|E_{in}(h) - E_{out}(h)| > \epsilon $ depende não apenas de $D$, mas também do espaço $\mathcal{X}$ inteiro. Então, como estamos ``agrupando'' hipóteses baseadas no comportamento de $D$, será necessário usar, além de $D$, um $D'$. E, a partir disto, estimar um $|E_{in}(h) - E_{out}(h)| \approx |E_{in}(h) - E'_{in}(h)|$.
+
+        Essa troca \textbf{é interessante} porque é possível provar que $m_{\mathcal{H}}(N)$ é polinomial quando há um \textit{break-point} $k$ (e o polinômio que limita essa \textit{growth-function} é de ordem $N^{k-1}$). Assim, retornando à desigualdade da qual partimos, conseguimos o resultado de que a probabilidade de $| E_{in} - E_{out} | > \epsilon$ é limitada polinomialmente.
+        
+        \textbf{O novo \textit{bound} obtido} é a desigualdade de Vapnik–Chervonenkis:
+        \[
+            P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}.
+        \]
+        
+        \item A dimensão VC é definida pelo máximo de pontos que podem ser fragmentados pelo espaço de hipóteses $\mathcal{H}$, o que se traduz como o quantia de parâmetros que se pode ajustar e efetivamente gerar diferentes dicotomias no conjunto de dados. Assim, quanto maior a dimensão VC de um espaço de hipóteses, maior é a expressividade do mesmo: o espaço terá maiores graus de liberdade para ajustar o modelo.
+        
+        \item Primeiro, temos a \textit{growth-function} em função da dimensão VC $d_{VC}$:
+        \[
+            m_{\mathcal{H}}(N) \leq \sum^{d_{VC}}_{i=0} {N \choose i} \leq N^{d_{VC}} + 1
+        \]
+        Então:
+        \[
+            m_{\mathcal{H}}(2N) \leq (2N)^{d_{VC}} + 1
+        \]
+        Portanto, o VC \textit{bound} em termos da dimensão VC é expresso por:
+        \[
+            P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 ((2N)^{d_{VC}} + 1) e^{-\frac{1}{8} \epsilon^2N}.
+        \]
+        
+        \item Como temos:
+        \[
+            P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq \underbrace{4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}}_{\delta}
+        \]
+        E queremos que $\epsilon$ e $\delta$ sejam os menores possíveis, podemos fazer uma aproximação grosseira de $\delta$ com o polinômio:
+        \[
+            \delta' = N^{d_{VC}} e^{-N}
+        \]
+        Fixando $\delta'$ como um valor pequeno (o que queremos), é necessário verificar como $N$ muda conforme $d_{VC}$ aumenta. Empiricamente, é possível encontrar uma certa proporcionalidade entre os valores de $N$ e $d_{VC}$, que para a grande maioria de valores (aceitáveis) de $\epsilon$ e $\delta$ pode ser estimado por:
+        \[
+            N \geq 10 d_{VC}
+        \]
+        A expressão acima também foi obtida empiricamente. Para calcular o número de amostras necessárias para uma certa precisão $\epsilon$ e probabilidade $\delta$, basta fixar esse valor pequeno da expressão para os $\epsilon$ e $\delta$ selecionados, e então verificar a proporcionalidade de $N$ e $d_{VC}$.
+        
+        \item Apenas garantir que $|E_{in} (h) - E_{out} (h)| < \epsilon$ não é suficiente porque se quisermos diminuir $E_{in}$ será necessário aumentar o espaço de hipóteses, o que acaba causando o efeito colateral de debilitar a generalização do modelo. Isso fica claro se rearranjarmos o limite VC, com probabilidade  $\geq 1 - \delta$, temos:
+        \[
+            \begin{array}{ll}
+            \Omega = \sqrt{\frac{8}{N} \ln \frac{4 m_{\mathcal{H}}(2N)}{\delta}} \\
+            E_{out} \leq E_{in} + \Omega
+            \end{array}
+        \]
+        Note que quando aumentamos a $d_{VC}$, o $E_{in}$ diminui, mas ao mesmo tempo o $\Omega$ aumenta, de modo que se torna necessário encontrar um balanço entre esses dois valores para que $E_{out}$ (o erro verdadeiro) seja baixo.
+        
+        \item Ambos os modelos têm uma estrutura que expõe o \textit{trade-off} entre aproximação e generalização, ou seja, quanto maior o espaço de hipóteses, melhor é a aproximação, mas pior é a generalização do aprendizado. A diferença entre eles é que a análise VC tem um $E_{in}$ computado com respeito a um \textit{dataset} $D$, enquanto que a análise \textit{bias-variance} se refere a uma hipótese média $\bar{g}$, com respeito a todos os \textit{datasets} $D$ de tamanho fixo; por isso o limite VC pode ser calculado explicitamente, mas o \textit{bias-variance} não. Também é interessante notar que, em vez de analisar $E_{in}$ e $E_{out}$, a análise \textit{bias-variance} usa como base de seu modelo a discrepância entre o valor médio aprendido e ao melhor que se poderia aprender (\textit{bias}) e a variância desse valor (\textit{variance}).
+        
+        \item As \textit{lectures} mencionadas são essenciais para compreender o porquê do aprendizado de máquina ser possível, e sob quais condições ele é efetivo. Na prática, entender os \textit{trade-off}s necessários será essencial para construir arquiteturas de aprendizado de máquina que façam sentido para os contextos que enfrentaremos, conciliando número de amostras e número de parâmetros para que eles se comportem melhor com os algoritmos desenvolvidos.
+        
+    \end{enumerate}
+
+\end{document}
+
