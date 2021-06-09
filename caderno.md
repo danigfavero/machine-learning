@@ -680,7 +680,7 @@ $$
   \begin{align}
   \mathbb{P}[|E_{in}(g) - E_{out}(g)|> \epsilon] & \leq \mathbb{P}[|E_{in}(h_1) - E_{out}(h_1)|> \epsilon \text{ or }  |E_{in}(h_2) - E_{out}(h_2)|> \epsilon \text{ or } \dots \text{ or } |E_{in}(h_M) - E_{out}(h_M)|> \epsilon]  \\
   & \leq \sum^M_{m=1} \mathbb{P}[|E_{in}(h_m) - E_{out}(h_m)|> \epsilon] \\
-  & \leq 2e^{-2 \epsilon^2 N}
+  & \leq 2Me^{-2 \epsilon^2 N}
   \end{align}
   $$
 
@@ -1806,3 +1806,161 @@ Ambos $E_{val}$ e $E_{test}$ são estimações de $E_{out}$
 - Métodos de ***cross-validation*** para reduzir a variância do $E_{val}$
 - Conjunto de teste pode ser usado para fazer uma estimativa não viesada do $E_{out}$ (se $D$ estiver disponível...)
 
+## Validação
+
+$$
+E_{out} = E_{in} + \text{erro de generalização}
+$$
+
+- Overfitting
+
+### O impacto do nível de ruído e a complexidade da target function
+
+$$
+y = f(x) + \underbrace{\epsilon(x)}_{\sigma^2} = \underbrace{\sum^{Q_f}_{q=0} \alpha_q x^q}_{\text{normalizado}} + \epsilon(x)
+$$
+
+- Nível de ruído: $\sigma^2$
+- Complexidade da *target*: $Q_f$
+- Tamanho do *dataset*: $N$
+
+### A medida de overfitting:
+
+- Nós fittamos o dataset usando nossos 2 models:
+  - $\mathcal{H}_2$: polinômios de grau 2
+  - $\mathcal{H}_{10}$: polinômios de grau 10
+- Compare os erros fora da amostra de $g_2 \in \mathcal{H}_2$ e $g_{10} \in \mathcal{H}_{10}$
+- A medida: $E_{out}(g_{10}) - E_{out}(g_2)$
+
+### Ruídos
+
+- **Ruído estocástico**: muito esforço em tentar reduzir $E_{in}$ leva a fittar o ruído nos dados
+- **Ruído determinístico:** há "uma certa complexidade $\mathcal{H}$" para cada target e quantia $N$ dos dados de treinamento
+
+### Validação VS regularização
+
+Em outra forma:
+$$
+E_{out}(h) = E_{in}(h) + \text{penalidade de overfit}
+$$
+
+- A regularização tenta estimar a $\text{penalidade de overfit}$
+- A validação tenta estimar o $E_{out}(h)$
+  - Como computar uma estimativa melhor do $E_{out}$?
+
+### Erro de validação
+
+- Particione o *dataset* existente em dois subconjuntos: $D = D_{train} \cup D_{test}$
+
+- $E_{val}$ é uma estimativa não viesada de $E_{out}$
+  $$
+  E[E_{val}(g)] = E_{out}(g)
+  $$
+
+- Seja $K = |D_{val}|$. Então
+  $$
+  E_{val}(g) = E_{out}(g) \pm O(\frac{1}{\sqrt{K}})
+  $$
+  
+
+- $K$ grande gera uma boa estimativa de $E_{out}$ (variância grande)
+- O conjunto $D$ é finito: há um trade-off
+  - $|D_{val}|$ grande $\implies |D_{train}|$ pequeno (pequena quantia de dados de treinamento) $\implies E_{out}$ grande e $E_{val} \approx E_{out}$
+  - $|D_{val}|$ pequeno $\implies |D_{train}|$ grande $\implies$ é possível que $E_{out}$ seja pequeno, mas $E_{val}$ tem grande variância
+- Nós podemos treinar uma hipótese $g$ em $D$ e reportar $E_{val}$ da hipótese $g^-$ trainada em $D_{train}$ (mas $E_{val}(g^-)$ não é uma estimativa de $E_{out}(g)$)
+- Na prática, $K = N/5$ é uma boa escolha
+
+### O dilema sobre $K$
+
+A seguinte cadeia de de raciocínio:
+$$
+E_{out}(g) \approx E_{out}(g^-) \approx E_{val}(g^-) \\
+(K \text{ pequeno})\ \ \ \ (K \text{ grande})
+$$
+destaca o dilema em selecionar $K$: podemos ter $K$ grande e pequeno ao mesmo tempo?
+
+### Deixe um de fora
+
+$N-1$ pontos para o treinamento, e $1$ ponto (neste caso, $(x_n, y_n)$) para validação:
+$$
+D_n = (x_1, y_1), \dots, (x_{n-1}, y_{n-1}), (x_{n+1}, y_{n+1}), \dots, (x_N, y_N)
+$$
+Hipótese final aprendida por $D_n$ é $g_n^-$
+$$
+e_n = E_{val}(g_n^-) = e(g_n^- (x_n), y_n)
+$$
+Erro de *cross-validation*:
+$$
+E_{CV} = \frac{1}{N} \sum^N_{n=1} e_n
+$$
+Treinamento é repetido $N= |D|$ vezes
+
+Na rodada de treinamento $i$, $D^{(i)}_{train} = D \setminus \{x^{(i)} \} $ e $D^{(i)}_{val} = D  \{x^{(i)} \}$$
+
+Erro de *cross-validation*: 
+$$
+E_{CV} = \frac{1}{N} \sum^N_{n=1} E_{val}^{(i)}
+$$
+$g_i^-$: hipótese treinada em $N-1$ exemplos
+
+Podemos mostrar que $E_{CV}$ é um estimador não enviesado de $E[E_{out}(g^-)]$
+
+### k-fold cross validation
+
+- Dividir $D$ em $k$ partes $D_1, D_2, \dots, D_k$ de tamanhos aproximadamente iguais
+- Repita o treinamento $k$ vezes
+
+$$
+E_{CV} = \frac{1}{k} \sum^k_{n=1} E_{val}^{(i)}
+$$
+
+- É caro
+
+### $E_{cv}$ é um bom estimador de $E_{out}$?
+
+- $k$ modelos $\implies k$ valores para $E_{out} \implies$ média $\bar{E}_{out}$
+- A variância de $E_{CV}$ não pode ser facilmente computada
+- Empiricamente, $E_{CV}$ é um bom estimador de $\bar{E}_{out}$
+- Ainda há muita discussão sobre o tema
+
+### Na prática...
+
+- Para o *holdout method* ($D = D_{train} \cup D_{val}$), uma proporção comum é de 70%-80% para treinamento e 20%-30%​ para validação
+- Para $k$-*fold cross-validation*, geralmente $k$ é 5 ou 10
+
+### Seleção de modelo
+
+- Hipótese $g \in \mathcal{H}$
+- Treinando dois modelos $g_1, g_2$, podemos comparar $E_{val}(g_1)$ e $E_{val}(g_2)$
+- Costuma-se escolher aquele que tiver menor erro de validação
+- Testes estatísticos podem ser aplicados para verificar se os erros são iguais
+  - Holdout error: teste de hipótese
+  - Cross validation: teste
+
+### Uma discussão interessante
+
+- Se usarmos $E_{val}$ para a seleção de modelo, $E_{val}$ não é mais uma estimativa não enviesada de $E_{out}$
+- Podemos fazer a mesma análise com $E_{val}$ e $E_{out}$, para $M$ hipóteses, usando a desigualdade de Hoeffding
+- Quanto maior o $K$, menor é o bound
+
+### *Early stopping*
+
+- Podemos pensar que temos um grande número de escolhas
+
+- É por isso que validation funciona
+
+### O processo  da seleção de modelo e avaliação de performance
+
+1. Divide o dataset
+2. Isola do conjunto de teste
+3. Usa o conjunto de treino e validação para treino e escolha de modelo
+4. O modelo escolhido pode ser re-treinado usando o conjunto inteiro de treino com validação
+5. Tendo o modelo final, computar $E_{test}$ sobre o conjunto de teste
+   - $E_{test}$ seria um estimador menos enviesado de $E_{out}$ do que $E_{val}$ e $E_{CV}$
+
+### Comentários finais
+
+- Muitas vezes só queremos escolher o melhor modelo, não estimar $E_{out}$
+- É comum não considerar o conjunto de teste
+- Obviamente, o erro de validação do modelo escolhido é enviesado
+- A mesma observação se mantém com respeito a qualquer uma das métricas computadas no conjunto de validação, após um modelo ser escolhido baseado no valor de $E_{val}$
