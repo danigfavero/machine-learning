@@ -1862,7 +1862,6 @@ $$
   E_{val}(g) = E_{out}(g) \pm O(\frac{1}{\sqrt{K}})
   $$
   
-
 - $K$ grande gera uma boa estimativa de $E_{out}$ (variância grande)
 - O conjunto $D$ é finito: há um trade-off
   - $|D_{val}|$ grande $\implies |D_{train}|$ pequeno (pequena quantia de dados de treinamento) $\implies E_{out}$ grande e $E_{val} \approx E_{out}$
@@ -1949,7 +1948,7 @@ $$
 
 - É por isso que validation funciona
 
-### O processo  da seleção de modelo e avaliação de performance
+### O processo da seleção de modelo e avaliação de performance
 
 1. Divide o dataset
 2. Isola do conjunto de teste
@@ -1964,3 +1963,197 @@ $$
 - É comum não considerar o conjunto de teste
 - Obviamente, o erro de validação do modelo escolhido é enviesado
 - A mesma observação se mantém com respeito a qualquer uma das métricas computadas no conjunto de validação, após um modelo ser escolhido baseado no valor de $E_{val}$
+
+## Regularização
+
+Duas abordagens para regularização:
+
+- **Matemática**: problemas mal-representados em aproximações de função
+  - É útil para obter uma intuição dos problemas
+- **Heurística**:  criar obstáculos para a minimização de $E_{in}$
+
+Em um exemplo com retas no plano 2D, a regularização pode **restringir** as retas em termos do *offset* e da inclinação que elas podem ter — assim, **sacrificamos o "*fit* perfeito"** no conjunto de treinamento (o que, na verdade, pode ser bom!)
+
+- Numa análise *bias-variance*, regularização pode trazer um ***bias* ligeiramente maior (**o *fit* não é perfeito), mas uma **variância bem menor**
+
+### O modelo polinomial
+
+- $\mathcal{H}_Q$: polinômios de ordem $Q$
+- regressão linear no espaço $Z$
+
+$$
+z = \begin{bmatrix} 1 \\ P_1(x) \\ \vdots \\ P_Q(x) \end{bmatrix},
+\ \ \ \ \ \ \
+\mathcal{H}_Q = \{ \sum^Q_{q=0} w_q P_q(x)  \}
+$$
+
+- Polinômios de Legendre:
+
+![Polinomios de Legendre - Wikipedia, la enciclopedia libre](https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Mplwp_legendreP05.svg/700px-Mplwp_legendreP05.svg.png)
+
+### Solução sem restrições
+
+Dados $(x_1, y_1), \dots, (x_N, y_N) \rightarrow (z_1, y_1), \dots, (z_N, y_N)$
+
+Minimize $E_{in}(w) = \frac{1}{N} \sum^N_{n=1}(w^Tz_n-y_n)^2$
+
+No formato de vetores: $\frac{1}{N} (Zw - y)^T(Zw - y)$
+
+Então: $w_{lin} = (Z^TZ)^{-1}Z^Ty$
+
+### Restringindo os pesos
+
+- **Restrição forte:** $\mathcal{H}_2$ é uma versão restringida de $\mathcal{H}_{10}$, com $w_q = 0$ para $q>2$
+  - (Já estávamos fazendo isso)
+
+- **Versão mais fraca:** $\sum^Q_{q=0} w^2_q \leq C$ — restrição de "**ordem fraca**"
+  - (Um pouco melhor)
+
+Minimize $\frac{1}{N} (Zw - y)^T(Zw - y)$
+
+​					sujeito à $w^Tw \leq C$
+
+Solução: $w_{reg}$em vez de $w_{lin}$
+
+#### Resolvendo para $w_{reg}$
+
+Minimize $\frac{1}{N} (Zw - y)^T(Zw - y)$
+
+​					sujeito à $w^Tw \leq C$
+
+![regularization](img/regularization.png)
+
+- Escolhendo um $w$ dentro da área que respeita a restrição, podemos calcular o gradiente da perda (minimizá-la) e descobrir a direção para onde $w$ deveria ir
+  - $\nabla E_{in}$ deve ser ortogonal à elipse azul
+  - $w$ é ortogonal à circunferência vermelha
+
+- Pelo desenho notamos que conforme movemos $w$ pela borda da circunferência, o valor de $E_{in}$ muda
+  - Mais do que isso: se movermos no sentido anti-horário, $E_{in}$ diminui!
+  - Então este $w$ atual não é mínimo: queremos que a normal e $\nabla E_{in}$ apontem para sentidos opostos
+
+$$
+\begin{align}
+	\nabla E_{in}(w_{reg}) & \propto - w_{reg} \\
+	& =  - 2 \frac{\lambda}{N} w_{reg} \\
+	\nabla E_{in}(w_{reg}) & + 2 \frac{\lambda}{N} w_{reg} = \vec{0}
+\end{align}
+$$
+
+- Minimize $E_{in}(w) + \frac{\lambda}{N}w^Tw$
+  - Agora temos que minimizar uma equação sem condições: bem mais simples :-)
+  - ***Augmented error:*** $E_{aug}(w) = E_{in}(w) + \frac{\lambda}{N}w^Tw$
+
+- Verificando a relação ente $C$ e $\lambda$: $C \uparrow \iff \lambda \downarrow$
+
+#### A solução:
+
+Minimize 
+$$
+\begin{align}
+E_{aug}(w) & = E_{in}(w) + \frac{\lambda}{N}w^Tw\\ 
+&= \frac{1}{N} ( (Zw - y)^T (Zw-y) + \lambda w^Tw)
+\end{align}
+\\
+\nabla E_{aug}(w) = 0 \implies Z^T(Zw-y) + \lambda w = 0
+$$
+Portanto $w_{reg} = (Z^TZ + \lambda I)^{-1} Z^Ty$ (com regularização)
+
+em oposição a $w_{lin} = (Z^TZ)^{-1}Z^Ty$ (sem regularização)
+
+#### O resultado 
+
+Minimizando $E_{in}(w) + \frac{\lambda}{N} w^Tw$ para diferentes $\lambda$'s:
+
+![regularization lambda](img/reg_lambda.png)
+
+### *Weight 'decay'*
+
+Minimizar  $E_{in}(w) + \frac{\lambda}{N} w^Tw$ é chamado *weight decay*
+
+**Decay?**
+
+- Gradiente descendente:
+
+$$
+\begin{align}
+w(t+1) & = w(t) - \eta \nabla E_{in} (w(t)) - 2 \eta \frac{\lambda}{N}w(t) \\ 
+&= w(t) (1 - 2 \eta \frac{\lambda}{N}) - \eta \nabla E_{in} (w(t))
+\end{align}
+$$
+
+- Aplicado à redes neurais:
+  $$
+  w^Tw = \sum^L_{l=1} \sum^{d^{(l-1)}}_{i=0} \sum^{d^{(l)}}_{j=1} (w_{ij}^{(l)})^2
+  $$
+
+  - *backpropagation*: de uma camada pra outra, vai decaindo
+
+#### Variações do *weight decay*
+
+Ênfase em certos pesos: $\sum^Q_{q=0} \gamma_q w^2_q$
+
+Exemplos:
+
+- $\gamma_q = 2^q \implies$ *fit* de baixa ordem
+- $\gamma_q = 2^{-q} \implies$ *fit* de alta ordem
+
+Redes neurais: diferentes camadas tem diferentes $\gamma$'s
+
+**Regularizador de Tikhonov:** $w^T T^T T w$
+
+#### *Weight growth*?
+
+- Restringimos os pesos para serem grandes: **ruim**!
+- Regra prática:
+  - **ruído estocástico** é de "alta frequência"
+  - **ruído determinístico** não é suave também
+- $\implies$ restrinja o aprendizado de modo que ele escolha hipóteses suaves
+  - Em geral, pesos menores correspondem à hipóteses mais suaves
+
+#### Forma geral do *augmented error*
+
+Seja o regularizador $\Omega = \Omega(h)$, minimizamos $E_{aug}(h) = E_{in}(h) + \frac{\lambda}{N}\Omega(h)$
+
+- Esta forma nos lembra bastante $E_{out}(h) \leq E_{in}(h) + \Omega(\mathcal{H})$
+  - $E_{aug}$ é um melhor representante de $E_{out}$ do que $E_{in}$
+
+### Escolhendo um regularizador
+
+- O regularizador perfeito $\Omega$: é um que restringe a "direção" da *target function*
+  - Mas não sabemos a *target function*!
+  - Princípio guia: mova-se na direção **mais suave** ou mais simples (ruído não é suave!)
+  - Escolheu um $\Omega$ ruim? Ainda temos $\lambda$!
+
+#### Regularizadores para redes neurais
+
+- ***Weight decay***: de linear para lógico
+
+- ***Weight elimination:***
+
+  - Quanto menos pesos, menor é a dimensão VC
+
+  - *Soft weight elimination*:
+    $$
+    \Omega(w) = \sum_{i,j,l} \frac{(w_{ij}^{(l)})^2}{\beta ^2 + (w_{ij}^{(l)})^2}
+    $$
+
+    - Para pesos muito pequenos, você está fazendo *weight decay*
+    - Para pesos muito grandes os $w$'s dominam (perto de 1)
+
+#### *Early stopping* como um regularizador
+
+- Regularização por meio do otimizador
+- Quando parar? **validação**
+- Cuidado: separe os conceitos de regularizar e otimizar!
+
+#### O $\lambda$ ótimo
+
+![noise and regularization](img/noise-and-regularization.png)
+
+- **Para ruído estocástico**:
+  - Quando não há ruído, regularização não é indicada (não há *overfitting* para lidar)
+  - Quanto maior o nível de ruído ($\sigma^2$), mais regularização é necessária
+- **Para ruído determinístico**:
+  - Quanto maior a complexidade da *target function* ($Q_f$), maior o ruído determinístico
+  - O comportamento é o mesmo do ruído estocástico
+
