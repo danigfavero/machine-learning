@@ -1,0 +1,37 @@
+\documentclass[a4paper,11pt]{article}
+\setlength{\textwidth}{6.3in}
+\setlength{\oddsidemargin}{-.125in}
+\setlength{\evensidemargin}{-.125in}
+\newcommand\tab[1][.5cm]{\hspace*{#1}}
+\usepackage[bottom=1in,top=1in]{geometry}
+
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{amsthm,amssymb,amsmath}
+
+
+\title{%
+    Quick Task 5\\
+    \large MAC0460 - Introdução ao Aprendizado de Máquina
+}
+\author{Daniela Gonzalez Favero - 10277443}
+\date{14 de Junho de 2020}
+
+\begin{document}
+
+    \maketitle
+
+    Regularização é definida por um conjunto de práticas que evitam o \textit{overfitting} do conjunto de treinamento durante o aprendizado. Esse \textit{overfitting} geralmente faz com que o modelo se adapte à ruídos presentes no conjunto de treinamento, de modo a gerar um Eout grande (não representar corretamente os dados fora das amostras).
+    
+    Podemos determinar modelos matemáticos de regularização, mas não faz muito sentido utilizá-los, porque eles acabam sendo representações pouco fiéis das funções que de fato modelam os dados. No entanto, os modelos matemáticos dão uma intuição interessante de como a regularização se comporta, intuição esta que pode ser utilizada para construir heurísticas que criem obstáculos para a minimização de $E_{in}$.
+    
+    Em geral, diminuir o vetor de pesos é uma boa ideia para suavizar o modelo que está sendo encaixado ao conjunto de dados. O regularizador perfeito seria aquele que restringe a direção da \textit{target function}. Como não temos a \textit{target function}, podemos seguir algumas das heurísticas que observamos na análise matemática.
+    
+    A utilização da regularização restringe o espaço de hipóteses, de modo a desconsiderar ruídos, buscando modelos mais suaves ou mais simples para o aprendizado.
+    
+    Na regularização que o prof. Abu-Mostafa chama de \textit{weight-decay}, $C$ é a restrição (chamada restrição de ``\textit{soft-order}'') imposta aos pesos do algoritmo de aprendizado quando estamos fazendo regressão linear. Tomando o gradiente do $E_{in}$ restrito à $w^Tw \leq C$, é possível notar que $E_{in}$ é proporcional a $C$. Mais do que isso: para um um determinado $\lambda$, o gradiente de $E_{in}$ será igual a $-2 \frac{\lambda}{N} w_{reg}$. Ou seja, quanto maior a restrição $C$, menor será o $\lambda$ que proporcionará o mínimo do gradiente de $E_{in}$. Utilizamos lambda em vez de $C$ porque quando rearranjamos a expressão de minimização de $E_{in}$ com um determinado lambda, ela deixa de ser um problema de minimização condicional (sujeito a uma certa restrição) e se torna um problema de minimização incondicional, que é bem mais simples de calcular.
+
+\end{document}
