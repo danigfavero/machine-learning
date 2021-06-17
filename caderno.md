@@ -2157,3 +2157,110 @@ Seja o regularizador $\Omega = \Omega(h)$, minimizamos $E_{aug}(h) = E_{in}(h) +
   - Quanto maior a complexidade da *target function* ($Q_f$), maior o ruído determinístico
   - O comportamento é o mesmo do ruído estocástico
 
+## Support Vector Machines (SVM)
+
+- A ideia de maximizar a margem
+
+### O problema de classificação binária no caso linearmente separável
+
+- Para tornar a solução mais robusta, é uma boa ideia ter uma reta com a maior margem possível
+- Como encontrar um **hiperplano separador que maximiza a margem**?
+- No SVM, formulamos o problema como um problema de otimização de **programação quadrática (QP)**
+  - Funções quadráticas, restrições lineares
+
+$$
+h(x) = sign(w^Tx + b)
+$$
+
+- Relacionar $w$ e $b$ à margem (distância entre $H$ e o ponto mais próximo dentre todos os $D$)
+
+### Calculando o melhor hiperplano
+
+Seja $D$ um conjunto de pontos linearmente separáveis, $x_n \in D$, e um hiperplano separador $H$ caracterizado por $w,b$
+
+Então:
+$$
+dist(x_n, H) = \frac{1}{\|w\|} y_n (w^T x_n + b)
+$$
+Podemos sempre escolher $(w,b)$ tais que o ponto $x_n$ mais próximo de $H$ que satisfaz:
+$$
+y_n (w^T x_n + b) = 1
+$$
+Neste caso:
+$$
+dist(x_n, H) = \frac{1}{\|w\|}
+$$
+
+### O problema que queremos resolver
+
+$$
+\begin{align}
+\text{maximize}_{w,b} & \frac{1}{\|w\|} \\
+\text{sujeito à } & \min_{n=1, \dots, N} y_n(w^Tx_n + b) = 1
+\end{align}
+$$
+
+- A restrição $\min_{n=1, \dots, N} y_n(w^Tx_n + b) = 1$ implica que $y_n(w^Tx_n + b) \geq 1$, o que não tem efeito de forçar todos os exemplo a serem classificados corretamente
+- A igualdade $\min_{n=1, \dots, N} y_n(w^Tx_n + b) = 1$ implica que a distância do ponto mais próximo ao hiperplano é $\frac{1}{\|w\|}$ (uma boa função objetiva!)
+
+**Fórmula dual equivalente:**
+$$
+\begin{align}
+\text{minimize}_{w,b} & \frac{1}{2}w^Tw \\
+\text{sujeito à } & \min_{n=1, \dots, N} y_n(w^Tx_n + b) = 1
+\end{align}
+$$
+**Fórmula relaxada equivalente:**
+$$
+\begin{align}
+\text{minimize}_{w,b} & \frac{1}{2}w^Tw & \\
+\text{sujeito à } & y_n(w^Tx_n + b) \geq 1, & n = 1 \dots, N
+\end{align}
+$$
+
+- O problema linearmente separável é  **hard margin** (nenhum ponto viola a margem)
+
+### O problema não linearmente separável
+
+- **Soft margin**: $y_n(w^Tx_n + b) \geq 1 - \xi$
+
+A fórmula:
+$$
+\begin{align}
+\text{minimize}_{w, b, \xi} & \frac{1}{2}w^Tw + C \sum^N_{n=1} \xi_n & \\
+\text{sujeito à }     & y_n(w^Tx_n + b) \geq 1 - \xi_n, 			   & \text{para } n = 1, \dots, N; \\
+					  & 									   & \xi_n \geq 0 \text{ para } n = 1, \dots, N.
+\end{align}
+$$
+$C \geq 0$ é um parâmetro especificado pelo usuário: quanto maior o $C$, menor é a violação da margem permitida
+
+![svm soft margin](img/svm-soft-margin.png)
+
+### Como resolver problemas de otimização QP?
+
+Primal: otimização QP padrão
+
+Dual: baseado na formulação de Lagrange
+
+### Forma padrão de problemas QP
+
+$M$ restrições desigualdades e $Q$ positiva semidefinida
+$$
+\begin{align}
+\text{minimize}_{u} & \frac{1}{2}u^TQu + p^T u \\
+\text{sujeito à }     & a^T_mu \geq c_m, 			   & (m = 1, \dots, M)
+\end{align}
+$$
+Na forma de matriz:
+$$
+\begin{align}
+\text{minimize}_{u} & \frac{1}{2}u^TQu + p^T u \\
+\text{sujeito à }     & Au \ge c
+\end{align}
+$$
+QP solvers podem ser usados para computar a solução ótima $u^*$:
+$$
+u^* \rightarrow QP(Q, p, A, c)
+$$
+![image-20210616171551519](img/svm-qp-solver.png)
+
