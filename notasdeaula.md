@@ -1,17 +1,11 @@
-MAC0460 - Introdução ao Aprendizado de Máquina
+# MAC0460 - Introdução ao Aprendizado de Máquina
 
-Oferecimento da disciplina no primeiro semestre de 2021, com a professora Nina S. T. Hirata, no Instituto de Matemática e Estatística da USP.
+Notas de aula pessoais.
 
 **Bibliografia**
 
 - **Book:** Abu-Mostafa et al. *Learning from Data,* 2012
 - [*Machine Learning* online course (MOOC)](https://work.caltech.edu/telecourse.html) — Caltech (video-lectures, slides)
-
-**Avaliação**
-
-- EPs
-- Exercícios escritos
-- QTs: Tarefas rápidas (~10% da nota final)
 
 ## Introdução
 
