@@ -238,7 +238,7 @@ h_w(x^{(n)}) = \sum^d_{i=0}w_ix_i = \begin{bmatrix} w_0 & w_1 & \dots & w_d \end
 J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2
 $$
 
-**initSolução baseada em álgebra de matrizes**
+**Solução baseada em álgebra de matrizes**
 
 Função de custo: $J(w) = \frac{1}{N} \sum^N_{n=1}(h_w(x^{(n)})-y^{(n)})^2$
 
@@ -2264,3 +2264,20 @@ u^* \rightarrow QP(Q, p, A, c)
 $$
 ![image-20210616171551519](img/svm-qp-solver.png)
 
+### Formulação dual
+
+Para um problema QP convexo e factível, na forma primal:
+$$
+\begin{align}
+\text{minimize}_{u} & \frac{1}{2}u^TQu + p^T u \\
+\text{sujeito à }     & a^T_mu \ge c_m, & (m=1,\dots,M)
+\end{align}
+$$
+defina a função Lagrangiana:
+$$
+\mathcal{L}(u, \alpha) = \frac{1}{2}u^TQu + p^T u + \sum^M_{m=1} \alpha _m (c_m - a^T_m u)
+$$
+A solução $u^*$ é ótima para o primal se e somente se $(u^*, \alpha^*)$ é uma solução para o problema de otimização dual
+$$
+\max_{\alpha \geq 0} \min_u \mathcal{L}(u, \alpha)
+$$
