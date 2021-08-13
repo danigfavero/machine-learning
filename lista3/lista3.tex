@@ -1,0 +1,107 @@
+\documentclass[a4paper,11pt]{article}
+\setlength{\textwidth}{6.3in}
+\setlength{\oddsidemargin}{-.125in}
+\setlength{\evensidemargin}{-.125in}
+\newcommand\tab[1][.5cm]{\hspace*{#1}}
+\usepackage[bottom=1in,top=1in]{geometry}
+
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{amsthm,amssymb,amsmath}
+
+
+\title{%
+    Lista de Exercícios 3\\
+    \large MAC0460 - Introdução ao Aprendizado de Máquina
+}
+\author{Daniela Gonzalez Favero - 10277443}
+\date{20 de Julho de 2021}
+
+\begin{document}
+
+    \maketitle
+    
+    \textbf{PARTE I}
+    \begin{enumerate}
+        \item O problema de regressão polinomial pode ser solucionado estendendo as soluções que vimos para resolver o problema de regressão linear. Para a solução baseada em álgebra de matrizes, quando queremos resolver o sistema $y = Xw$, obtemos o vetor de pesos $w$ computando $w = (X^TX)^{-1}X^Ty$. Para o caso polinomial, basta considerar $X$ como a matriz de Vandermonde:
+        \[
+            X = 
+            \begin{bmatrix}
+                     1 &    x_1 &  x_1^2 & \hdots &  x_1^d \\
+                     1 &    x_2 &  x_2^2 & \hdots &  x_2^d \\
+                \vdots & \vdots & \vdots & \ddots & \vdots \\
+                     1 &    x_n &  x_n^2 & \hdots &  x_n^d \\
+            \end{bmatrix}
+        \]
+        Tal que $d$ é a dimensão dos dados e $n$ é o número de amostras. Assim, o valor de $w$ será o vetor de pesos adequado para o problema polinomial.
+        
+        Já para a solução que utiliza algoritmo de gradiente descendente, temos o seguinte código a cada iteração:
+        \begin{verbatim}
+            w <- w + lr * delta
+            delta <- - derivada(J(w))
+        \end{verbatim}
+        
+        Com \texttt{w} sendo o vetor de pesos, \texttt{lr} a taxa de aprendizado e \texttt{J(w)} a função de perda. Podemos derivar a expressão polinomial e verificar qual é o formato da função de perda:
+        \[
+            \begin{array}{lll}
+                \frac{\partial J}{\partial w_j} & = \frac{\partial}{\partial w_j} \frac{1}{2} \sum_n (\hat{y}_n - y_n)^2 \\
+                & = \frac{1}{2}  \sum_n 2(\hat{y}_n- y_n \frac{\partial}{\partial w_j} (\hat{y}_n - y_n) \\
+                & = \sum_n(\hat{y}_n- y_n) \frac{\partial}{\partial w_j} ((w_0 + w_1 x_{1n}^1 + w_2 x_{2n}^2 + \dots + w_j x_{jn}^j + \dots + w_d x_{dn}^d) - y_n) \\
+                & = \sum_n(\hat{y}_n- y_n)x_{jn}^j
+            \end{array}
+        \]
+        Como $x$ são constantes no algoritmo, basta elevá-lo à $j$ em cada iteração, e o algoritmo decorre naturalmente da expressão \texttt{derivada(J(w))} acima.
+        
+        \item Para problemas de classificação binária, é possível afirmar que ambos os algoritmos de regressão logística quando o SVM funcionam construindo um hiperplano ou uma linha (fronteira de decisão que separa os dados em duas classes. Além disso, essas soluções utilizam algoritmos iterativos para construir fronteiras ótimas (cada uma seguindo seu próprio conceito de ``ótimo''), atualizando o vetor de pesos a cada iteração.
+        
+        No entanto, os algoritmos apresentam algumas diferenças como: enquanto a regressão logística utiliza o gradiente descendente para somente encontrar o mínimo da função \textit{target}, o SVM busca maximizar a margem entre os pontos e o hiperplano que os separa (utilizando programação quadrática). Por isso SVM reduz o risco de erros nos dados, afinal o algoritmo descarta possíveis fronteiras de decisão (que seriam selecionadas pela regressão logística) que estariam relativamente longe da otimalidade.
+
+        \item Confrontando-se os dois algoritmos, é possível observar que as redes neurais são interessantes para dados não-estruturados, sem a necessidade de extrair \textit{features} desses dados. Isso é útil para processar dados como imagens, para geração de dados a partir da exposição a um conjunto de amostras (por meio de redes generativas) e também para tarefas que necessitem de aprendizado por reforço. Além disso, sua flexibilidade proporciona facilidade para trabalhar com \textit{feature engineering}.
+        
+        Já o SVM mostra-se interessante por sua eficiência: o algoritmo fica linear no número de parâmetros, além de obter resultados satisfatórios ao processar apenas um subconjunto dos dados (isso por causa de sua arquitetura definida sobre o \textit{support vector}). O SVM também garantidamente converge para o mínimo global (diferente das redes neurais, que podem convergir para mínimos locais) por causa do uso de programação quadrática. Por isso, este algoritmo se mostra interessante para busca rápida de hiper-parâmetros adequados (\textit{grid search} mais eficiente) e processamento mais rápido de dados que sejam estruturados (tenham \textit{features} mais claras e fáceis de extrair).
+        
+        \item No contexto de \textit{machine learning}, a validação do modelo é feita a partir de um subconjunto dos dados, a fim de avaliar o \textit{fit} do modelo (de maneira não enviesada) no conjunto de treinamento para selecionar melhores hiper-parâmetros. A partir da validação é possível ajustar a configuração do modelo, incorporando os resultados obtidos na execução do \textit{fit} neste subconjunto. Por isso, é considerado como um conjunto para que o desenvolvedor ajuste o modelo.
+        
+        Por outro lado, o teste do modelo é feito a partir de outro subconjunto dos dados (além do conjunto de treinamento e de validação) e é utilizado para avaliar, de maneira não enviesada, o \textit{fit} final do modelo. Com este conjunto será realizada a \textit{cross-validation} e se calculará o quão bem o modelo final se ajusta aos dados, comparando as métricas (acurácia, precisão, erro, entre outras) do treinamento com aquelas obtidas no teste.
+
+        \item \textit{Overfitting} é um fenômeno que pode ocorrer em \textit{machine learning} quando um modelo se ajusta tão bem a um conjunto de dados que ele acaba ``decorando'' os dados em vez de aprender com eles. Ou seja, o modelo cria uma função muito sofisticada que mapeia os dados de treinamento corretamente às suas respectivas respostas, em vez de gerar uma função que generaliza adequadamente o formato da amostra. Assim, quando o modelo for utilizado para predizer as respostas para novos conjuntos de dados, o resultado não será satisfatório.
+        
+        É possível detectar \textit{overfitting} com validação: após ajustar o modelo aos dados de treinamento (um subconjunto dos dados disponíveis), pode-se rodar o modelo sobre o subconjunto de validação. Se o erro de validação for significativamente maior do que o erro de treinamento, é provável que tenha ocorrido \textit{overfitting} dos dados de treinamento.
+        
+        Podemos combater \textit{overfitting} diminuindo a complexidade do modelo, de modo que a função (gerada pelo algoritmo) que irá mapear os dados de entrada para os dados de saída não seja sofisticada demais em comparação com a função \textit{target} (que de fato mapeia os dados). A diminuição da complexidade do modelo pode ser feita de diferentes maneiras, dependendo do algoritmo de \textit{machine learning} que está sendo utilizado. Aqui entra a importância da etapa de validação do modelo, que permitirá o ajuste dos hiper-parâmetros de modo a evitar o \textit{overfitting}.
+
+    \end{enumerate}
+    
+    \textbf{PARTE II}
+    \begin{enumerate}
+        \setcounter{enumi}{5}
+
+        \item Avaliação do meu nível de aprendizado ao longo do semestre:
+            \begin{itemize}
+                \item Acredito ter compreendido bem 80\% dos tópicos.
+                
+                \item Considero que avancei mais em meu conhecimento sobre Desigualdade de Hoeffding, dicotomias e VC \textit{bound}. A partir da teoria que sustenta o \textit{machine learning}, foi possível notar que sempre há um \textit{trade-off} entre o aumento da dimensão $d_{VC}$ (que diminui o erro empírico $E_{in}$) e a diminuição do valor de $\Omega = \sqrt{\frac{8}{N} \ln \frac{4 m_{\mathcal{H}}(2N)}{\delta}}$ (com $m_{\mathcal{H}}(N)$ sendo a \textit{growth function} dada pelo número máximo de dicotomias em quaisquer $N$ pontos, e $\delta = 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2 N}$). Estabelecer essa relação entre $E_{in}$ e $E_{out}$ para chegar à desigualdade de $P(|E_{in}(g) - E_{out}(g)|> \epsilon) \leq 4 m_{\mathcal{H}}(2N) e^{-\frac{1}{8} \epsilon^2N}$ é necessário para compreender relações de graus de liberdade sobre os parâmetros de determinado modelo e também para mostrar a teoria na qual o aprendizado de máquina se apoia.
+                
+                \item Considero ter avançado menos sobre o tópico de SVM, por não ter encontrado tempo para estudar melhor a teoria por trás da formulação do algoritmo (no entanto, acredito ter compreendido a motivação e a influência dos hiper-parâmetros sobre este algoritmo). Também considero ter avançado menos sobre o tópico de Imagens e Redes Neurais Convolucionais por já ter estudado o tema anteriormente.
+                
+                \item Eu daria nota 8 para o meu grau de aproveitamento.
+            \end{itemize}
+
+        \item Avaliação da minha dedicação ao longo da disciplina:
+            \begin{itemize}
+                \item Estudei 90\% dos tópicos.
+                
+                \item Não deixei de fazer nenhum QT, lista ou EP. Também não entreguei nenhuma das atividades com atraso.
+                
+                \item Acredito que a minha frequência seria 90\%.
+            \end{itemize}
+        
+        \item Acredito que meu desempenho nesta disciplina foi satisfatório. Eu estive bem engajada indo às aulas até junho, participando no \textit{chat} quando possível. Em julho por causa do fim do semestre (por estar bem atarefada) acabei faltando em algumas aulas e por isso concordo em não receber 100\% de presença na disciplina. Quanto às tarefas pedidas e tópicos estudados, avalio que estive bem comprometida com a disciplina: entreguei tudo o que foi pedido dentro do prazo e obtive boas avaliações. Estudei para fazer esses trabalhos e também me preparei para aulas assistindo às aulas do professor Mustafa. Tive certa facilidade na disciplina por já ter uma certa experiência com \textit{python} e \textit{data science}, mas a parte teórica (VC \textit{dimension} e desigualdade de Hoeffding) foi a mais desafiadora e mais agregadora na minha opinião.
+
+    \end{enumerate}
+
+\end{document}
+
